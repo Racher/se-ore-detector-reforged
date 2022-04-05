@@ -22,7 +22,7 @@ namespace OreDetectorReforged
         public int TaskPerCollect => (SessionComponent.config.searchFrequencyPlayer + 5) / 6;
 
         static bool IsHandDrilling() => MyAPIGateway.Session.Player.Character == MyAPIGateway.Session.ControlledObject
-            && (MyAPIGateway.Session.Player.Character.EquippedTool as IMyHandDrill) != null;
+            && (MyAPIGateway.Session.Player.Character?.EquippedTool as IMyHandDrill) != null;
 
         static IMyOreDetector GetControlledVesselDetector() => (MyAPIGateway.Session.ControlledObject as IMyShipController)
             ?.CubeGrid.GetFatBlocks<IMyOreDetector>().FirstOrDefault(det => det.IsWorking);

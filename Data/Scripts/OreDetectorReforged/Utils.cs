@@ -23,7 +23,7 @@ namespace OreDetectorReforged
     static class MyTransforms
     {
         public static Vector3I GetCenter(Vector3I v, int lod) => v + (1 << lod >> 1);
-        public static Vector3D ChunkCenterW(ChunkInfo chunk) => Lodn1ToWorld(chunk.vbi.vb, GetCenter(chunk.v, chunk.w) * 4 + 3);
+        public static Vector3D ChunkCenterW(ChunkInfo chunk) => Lodn1ToWorld(chunk.vbi.vb, GetCenter(chunk.v, chunk.w) * 4 + 1);
         public static Vector3I WorldToLod(MyVoxelBase vb, Vector3D p, int lod) => Vector3D.Round((Vector3D.Transform(p, vb.GetViewMatrix()) + (vb.Size >> 1)) / (1 << lod));
         public static Vector3D Lodn1ToWorld(MyVoxelBase vb, Vector3I p) => Vector3D.Transform(new Vector3D(p - vb.Size) / 2, vb.WorldMatrix);
     }
@@ -164,6 +164,8 @@ namespace OreDetectorReforged
                 if (material.MinedOre != "Ice")
                     oreMappingNoIce[material.Index] = (byte)idx;
             }
+            if (oreNames.Count == 0)
+                throw new Exception("oreNames.Count == 0");
             this.oreNames = oreNames.ToArray();
         }
     }

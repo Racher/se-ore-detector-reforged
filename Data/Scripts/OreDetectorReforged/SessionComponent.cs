@@ -12,6 +12,7 @@ namespace OreDetectorReforged
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     class SessionComponent : MySessionComponentBase
     {
+        public const int msgId = 43818;
         public static Config config;
         public static int configVersion;
         public static MaterialOreMapping materialOreMapping;
@@ -21,38 +22,10 @@ namespace OreDetectorReforged
         public static Exception lastException;
         public static string debugString;
         public static BlockingCollection<SearchTask> tasks;
-
         ConfigReader configReader;
-        Detector detector;
+        Detector playerDetector;
         int counter;
-        int threadsLaunched;
-
-        void OnSessionReady()
-        {
-            if (MyAPIGateway.Session.Player == null)
-                return;
-            try
-            {
-                materialOreMapping = new MaterialOreMapping();
-                tasks = new BlockingCollection<SearchTask>(new ConcurrentQueue<SearchTask>());
-                configReader = new ConfigReader();
-                configReader.Update();
-                detector = new Detector(new PlayerDetectorIO());
-                var terminalProp = MyAPIGateway.TerminalControls.CreateProperty<Dictionary<string, Vector3D>, IMyOreDetector>("Ores");
-                terminalProp.Getter = (e) => e.Components.Get<EntityComponent>()?.GetResult();
-                terminalProp.Setter = (e, _) => e.Components.Get<EntityComponent>()?.Reset();
-                MyAPIGateway.TerminalControls.AddControl<IMyOreDetector>(terminalProp);
-            }
-            catch (Exception e)
-            {
-                lastException = e;
-            }
-        }
-
-        public override void Init(MyObjectBuilder_SessionComponent sessionComponent)
-        {
-            MyAPIGateway.Session.OnSessionReady += OnSessionReady;
-        }
+        int threadsStarted;
 
         void UpdateMain()
         {
@@ -61,10 +34,10 @@ namespace OreDetectorReforged
             var sw = Stopwatch.GetTimestamp();
             try
             {
-                configReader?.Update();
-                for (; threadsLaunched < (SessionComponent.config?.searchBackgroundThreads ?? 0); ++threadsLaunched)
+                configReader.Update();
+                for (; threadsStarted < (config?.searchBackgroundThreads ?? 0); ++threadsStarted)
                     MyAPIGateway.Parallel.StartBackground(new BackgroundVoxelStorageReader());
-                detector?.Update();
+                playerDetector.Update();
             }
             catch (Exception e)
             {
@@ -77,24 +50,26 @@ namespace OreDetectorReforged
         {
             if (counter % 100 != 0)
                 return;
-            if (!(config?.debugNotifications ?? true))
-                return;
-            MyAPIGateway.Utilities.ShowNotification("Simulation/Main CPU " + mainTime.ToString(), 1600);
-            MyAPIGateway.Utilities.ShowNotification("Thread/Worker CPU " + workTime.ToString(), 1600);
-            MyAPIGateway.Utilities.ShowNotification("Background CPU " + backTime.ToString(), 1600);
-            mainTime = default(TimeSpan);
-            workTime = default(TimeSpan);
-            backTime = default(TimeSpan);
-            if (debugString != null)
+            if (lastException != null)
             {
-                MyAPIGateway.Utilities.ShowNotification("debugString " + debugString, 1600);
-                debugString = null;
+                VRage.Utils.MyLog.Default.WriteLine(lastException.ToString());
+                MyAPIGateway.Utilities.ShowMessage("", lastException.ToString());
+                lastException = null;
             }
-            if (lastException == null)
-                return;
-            VRage.Utils.MyLog.Default.WriteLine(lastException.ToString());
-            MyAPIGateway.Utilities.ShowMessage("", lastException.ToString());
-            lastException = null;
+            if (config?.debugNotifications ?? false)
+            {
+                MyAPIGateway.Utilities.ShowNotification("Simulation/Main CPU " + mainTime.ToString(), 1600);
+                MyAPIGateway.Utilities.ShowNotification("Thread/Worker CPU " + workTime.ToString(), 1600);
+                MyAPIGateway.Utilities.ShowNotification("Background CPU " + backTime.ToString(), 1600);
+                mainTime = default(TimeSpan);
+                workTime = default(TimeSpan);
+                backTime = default(TimeSpan);
+                if (debugString != null)
+                {
+                    MyAPIGateway.Utilities.ShowNotification("debugString " + debugString, 1600);
+                    debugString = null;
+                }
+            }
         }
 
         public override void UpdateAfterSimulation()
@@ -104,10 +79,20 @@ namespace OreDetectorReforged
             ++counter;
         }
 
+        public override void Init(MyObjectBuilder_SessionComponent sessionComponent)
+        {
+            materialOreMapping = new MaterialOreMapping();
+            tasks = new BlockingCollection<SearchTask>(new ConcurrentQueue<SearchTask>());
+            configReader = new ConfigReader();
+            playerDetector = new Detector(new PlayerDetectorIO());
+            MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(msgId, EntityComponent.HandleDetectorRequest);
+        }
+
         protected override void UnloadData()
         {
-            tasks.CompleteAdding();
-            tasks.Dispose();
+            MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(msgId, EntityComponent.HandleDetectorRequest);
+            tasks?.CompleteAdding();
+            tasks?.Dispose();
         }
     }
 }

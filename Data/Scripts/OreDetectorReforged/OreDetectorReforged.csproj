@@ -14,8 +14,8 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <OutputPath>..\..\..\StudioOutput</OutputPath>
-    <BaseIntermediateOutputPath>..\..\..\StudioOutput</BaseIntermediateOutputPath>
+    <OutputPath>..\..\..\..\..\StudioOutput</OutputPath>
+    <BaseIntermediateOutputPath>..\..\..\..\..\StudioOutput</BaseIntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Sandbox.Common">

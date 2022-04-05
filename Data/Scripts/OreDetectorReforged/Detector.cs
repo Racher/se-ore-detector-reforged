@@ -37,7 +37,7 @@ namespace OreDetectorReforged
 
         public void Update()
         {
-            if (busy)
+            if (busy || SessionComponent.config == null)
                 return;
             busy = true;
             chunkCollector.CollectVoxelBases(detectorIO.GetPosition());

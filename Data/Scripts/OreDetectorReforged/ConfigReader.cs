@@ -12,7 +12,7 @@ namespace OreDetectorReforged
 
         public void Update()
         {
-            if (sleep && MyAPIGateway.Gui.GetCurrentScreen != VRage.Game.ModAPI.MyTerminalPageEnum.Gps)
+            if (MyAPIGateway.Session.Player == null || sleep && MyAPIGateway.Gui.GetCurrentScreen != VRage.Game.ModAPI.MyTerminalPageEnum.Gps)
                 return;
             sleep = MyAPIGateway.Gui.GetCurrentScreen != VRage.Game.ModAPI.MyTerminalPageEnum.Gps;
             foreach (var gps in MyAPIGateway.Session.GPS.GetGpsList(MyAPIGateway.Session.Player.IdentityId))

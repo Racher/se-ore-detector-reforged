@@ -31,13 +31,15 @@ Active detectors produce search tasks and read/write cache/output every 10 or 10
 
 **Voxel Level Of Detail**:
 The base game seems to reads voxels on lod2 which contains many false positives. This mod uses lod3 to lod1.  
-Expected VoxelSize=1m (vanilla default): compatibility risk.
+Expected VoxelSize=1m (vanilla default) (compatibility risk).
 
 **Cache**:
 Each detector has it's own cache (~10MB). Cleared when config changes.
 
 **IngameScripting**:
-Activated by the first GetValue call per detector block. The result will be empty initially. Deactivate with SetValue("Ores", null).
+Activated by GetValue call. The result will be empty initially.  
+The calculation is done by the owner of the detector block and the result is sent to the server.  
+The mod uses a hard coded hopefully unique MyAPIGateway.Multiplayer message handler id 43818 (compatibility risk).
 
 ## Config
 
