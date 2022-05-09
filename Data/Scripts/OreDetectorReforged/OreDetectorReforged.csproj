@@ -12,17 +12,40 @@
     <LangVersion>6</LangVersion>
     <PlatformTarget>x64</PlatformTarget>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <OutputPath>..\..\..\..\..\StudioOutput</OutputPath>
-    <BaseIntermediateOutputPath>..\..\..\..\..\StudioOutput</BaseIntermediateOutputPath>
+    <OutputPath>..\..\..\output\</OutputPath>
+    <BaseIntermediateOutputPath>..\..\..\output\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="ProtoBuf.Net">
+      <HintPath>..\..\..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\ProtoBuf.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="ProtoBuf.Net.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\ProtoBuf.Net.Core.dll</HintPath>
+    </Reference>
     <Reference Include="Sandbox.Common">
       <HintPath>C:\\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Sandbox.Common.dll</HintPath>
     </Reference>
     <Reference Include="Sandbox.Game">
       <HintPath>C:\\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Sandbox.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Game.XmlSerializers, Version=0.1.1.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Sandbox.Game.XmlSerializers.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Graphics, Version=0.1.1.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Sandbox.Graphics.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.RenderDirect, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\Sandbox.RenderDirect.dll</HintPath>
     </Reference>
     <Reference Include="SpaceEngineers.Game">
       <HintPath>C:\\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\SpaceEngineers.Game.dll</HintPath>
@@ -31,6 +54,10 @@
       <HintPath>C:\\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\SpaceEngineers.ObjectBuilders.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="VRage">
       <HintPath>C:\\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.dll</HintPath>
@@ -50,18 +77,56 @@
     <Reference Include="VRage.Render">
       <HintPath>C:\\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Render.dll</HintPath>
     </Reference>
+    <Reference Include="VRage.Scripting">
+      <HintPath>C:\\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64\VRage.Scripting.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigReader.cs" />
-    <Compile Include="Detector.cs" />
-    <Compile Include="ChunkCollector.cs" />
-    <Compile Include="EntityComponent.cs" />
-    <Compile Include="MyWorkData.cs" />
-    <Compile Include="PlayerDetectorIO.cs" />
-    <Compile Include="OreCache.cs" />
-    <Compile Include="SessionComponent.cs" />
-    <Compile Include="Utils.cs" />
-    <Compile Include="VoxelStorageReader.cs" />
+    <Compile Include="LegacyGpsCleaner.cs" />
+    <Compile Include="TerminalSession.cs" />
+    <Compile Include="LinearCompressor.cs" />
+    <Compile Include="DetectorPagePlanet.cs" />
+    <Compile Include="DetectorBlockStorage.cs" />
+    <Compile Include="Node.cs" />
+    <Compile Include="DetectorServer.cs" />
+    <Compile Include="SearchTask.cs" />
+    <Compile Include="TestPlanetOreGeneration.cs" />
+    <Compile Include="DetectorPageNotPlanet.cs" />
+    <Compile Include="IDetectorPage.cs" />
+    <Compile Include="Microsoft\PriorityQueue.cs" />
+    <Compile Include="PermaCache.cs" />
+    <Compile Include="DetectorComponent.cs" />
+    <Compile Include="PlanetCubemapHelper.cs" />
+    <Compile Include="PlanetMatHelper.cs" />
+    <Compile Include="PlayerOreDetectorSession.cs" />
+    <Compile Include="BigGustavePng\Adam7.cs" />
+    <Compile Include="BigGustavePng\Adler32Checksum.cs" />
+    <Compile Include="BigGustavePng\ChunkHeader.cs" />
+    <Compile Include="BigGustavePng\ColorType.cs" />
+    <Compile Include="BigGustavePng\CompressionMethod.cs" />
+    <Compile Include="BigGustavePng\Crc32.cs" />
+    <Compile Include="BigGustavePng\Decoder.cs" />
+    <Compile Include="BigGustavePng\FilterMethod.cs" />
+    <Compile Include="BigGustavePng\FilterType.cs" />
+    <Compile Include="BigGustavePng\HeaderValidationResult.cs" />
+    <Compile Include="BigGustavePng\IChunkVisitor.cs" />
+    <Compile Include="BigGustavePng\ImageHeader.cs" />
+    <Compile Include="BigGustavePng\InterlaceMethod.cs" />
+    <Compile Include="BigGustavePng\MyCompressionStreamLoad.cs" />
+    <Compile Include="BigGustavePng\Palette.cs" />
+    <Compile Include="BigGustavePng\Pixel.cs" />
+    <Compile Include="BigGustavePng\Png.cs" />
+    <Compile Include="BigGustavePng\PngBuilder.cs" />
+    <Compile Include="BigGustavePng\PngOpener.cs" />
+    <Compile Include="BigGustavePng\PngOpenerSettings.cs" />
+    <Compile Include="BigGustavePng\PngStreamWriteHelper.cs" />
+    <Compile Include="BigGustavePng\RawPngData.cs" />
+    <Compile Include="BigGustavePng\StreamHelper.cs" />
+    <Compile Include="BigGustavePng\Tuples.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>cd ..\
+deploy.cmd</PostBuildEvent>
+  </PropertyGroup>
 </Project>

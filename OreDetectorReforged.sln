@@ -5,6 +5,13 @@ VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OreDetectorReforged", "Data\Scripts\OreDetectorReforged\OreDetectorReforged.csproj", "{0C7040E2-FED8-4CB6-8A52-CEA5FA97D7D8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{504DB549-7EF6-4A9C-A604-9AD77F69E324}"
+	ProjectSection(SolutionItems) = preProject
+		changelog.md = changelog.md
+		LICENSE.md = LICENSE.md
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
