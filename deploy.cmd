@@ -1,6 +1,8 @@
 set out=%AppData%\SpaceEngineers\Mods\"Ore Detector Reforged PTR"
 rmdir %out% /sq
 mkdir %out%
+xcopy *.txt %out%\ /dy
+xcopy *.steamtxt %out%\ /dy
 xcopy *.md %out%\ /dy
 xcopy *.sln %out%\ /dy
 xcopy thumb.jpg %out%\ /dy

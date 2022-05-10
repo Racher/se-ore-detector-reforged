@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.1] - 2022-05-10
+### Fixed
+- Fix multiplayer disconnect ModStorage KeyNotFound
+
 ## [2.0.0] - 2022-05-08
 ### Added
 - Use planet generation _mat.png

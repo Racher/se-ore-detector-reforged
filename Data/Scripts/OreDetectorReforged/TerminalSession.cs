@@ -54,8 +54,9 @@ namespace OreDetectorReforged
 
 		static byte[] GetLocalBytes(IMyEntity entity)
 		{
-			var s = entity?.Storage?[guid];
-			return s != null ? Convert.FromBase64String(s) : null;
+			string s = null;
+			entity?.Storage?.TryGetValue(guid, out s);
+			return s == null ? null : Convert.FromBase64String(s);
 		}
 
 		static void SetLocalBytes(IMyEntity entity, byte[] v)
