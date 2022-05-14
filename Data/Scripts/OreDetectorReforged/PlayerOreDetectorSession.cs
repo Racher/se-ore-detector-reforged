@@ -3,7 +3,6 @@ using System;
 using Sandbox.ModAPI;
 using VRageMath;
 using Sandbox.Definitions;
-using System.Linq;
 using System.Collections.Generic;
 
 namespace OreDetectorReforged
@@ -11,42 +10,85 @@ namespace OreDetectorReforged
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     class PlayerOreDetectorSession : MySessionComponentBase
     {
+        const string gpsDesc = "Reforged";
         uint counter;
+
+        class CombinedSetting
+        {
+            public int period = 1000;
+            public readonly int[] count = new int[128];
+            public readonly float[] range = new float[128];
+            public Color color;
+
+            public static CombinedSetting operator |(CombinedSetting l, DetectorBlockStorage r)
+            {
+                var whitelist = r.Whitelist;
+                for (var i = 0; i < l.count.Length; ++i)
+                {
+                    if (!whitelist[i])
+                        continue;
+                    l.period = Math.Min(l.period, Math.Max(1, r.period));
+                    l.count[i] = Math.Max(l.count[i], Math.Min(1000, r.count));
+                    l.range[i] = Math.Max(l.range[i], r.range);
+                    l.color = r.color;
+                }
+                return l;
+            }
+        }
+
+        bool GetDetector(out CombinedSetting settings, out Vector3D position)
+        {
+            settings = null;
+            var shipController = Session.ControlledObject as IMyShipController;
+            if (shipController != null)
+                foreach (var detector in shipController.CubeGrid.GetFatBlocks<IMyOreDetector>())
+                    if (detector.IsWorking)
+                        settings = (settings ?? new CombinedSetting()) | TerminalSession.GetLocalOrNewDet(detector);
+            position = shipController?.GetPosition() ?? new Vector3D();
+            return settings != null;
+        }
+
+        void RemoveMarkers()
+        {
+            if (Session.Player != null)
+                foreach (var gps in Session.GPS.GetGpsList(Session.Player.IdentityId))
+                    if (gps.Description == gpsDesc)
+                        Session.GPS.RemoveLocalGps(gps);
+        }
+
         public override void UpdateAfterSimulation()
         {
+            const uint loadingTime = 60;
             ++counter;
-            if (counter < 60)
-                return;
-            var detector = (Session.ControlledObject as IMyShipController)?.CubeGrid.GetFatBlocks<IMyOreDetector>().FirstOrDefault(det => det.IsWorking);
-            if (detector == null)
-                return;
-            var settings = TerminalSession.GetLocalOrNew<DetectorBlockStorage>(detector);
-            if (settings == null || settings.period < 1 || settings.range <= 1.5f || settings.count < 1 || settings.whitelist == 0)
-                return;
-            var area = new BoundingSphereD(detector.GetPosition(), settings.range);
-            List<string> searchOres;
+            CombinedSetting settings;
+            Vector3D position;
+            if (counter < loadingTime || !GetDetector(out settings, out position))
             {
-                string[] oreNames;
-                MyDefinitionManager.Static.GetOreTypeNames(out oreNames);
-                searchOres = new List<string>(oreNames.Length);
-                for (var i = 0; i < oreNames.Length; ++i)
-                    if ((settings.whitelist & (1ul << i)) != 0)
-                        searchOres.Add(oreNames[i]);
+                RemoveMarkers();
+                return;
             }
+            string[] oreNames;
+            MyDefinitionManager.Static.GetOreTypeNames(out oreNames);
+            var searchOres = new List<int>(oreNames.Length);
+            var l = Math.Min(oreNames.Length, settings.count.Length);
+            for (var i = 0; i < l; ++i)
+                if (settings.count[i] > 0)
+                    searchOres.Add(i);
             var bucket = (int)(counter % settings.period);
             var start = bucket * searchOres.Count / settings.period;
             var end = (bucket + 1) * searchOres.Count / settings.period;
-            for (var i = start; i < end; ++i)
+            for (var j = start; j < end; ++j)
             {
-                var ore = searchOres[i];
-                DetectorServer.Add(new SearchTask(area, ore, Math.Min(1000, settings.count), (results) =>
+                var i = searchOres[j];
+                var ore = oreNames[i];
+                var area = new BoundingSphereD(position, settings.range[i]);
+                if (area.Radius < 2)
+                    continue;
+                DetectorServer.Add(new SearchTask(area, ore, settings.count[i], (results) =>
                 {
-                    const string gpsDesc = "Reforged";
                     if (MyAPIGateway.Gui.GetCurrentScreen != VRage.Game.ModAPI.MyTerminalPageEnum.None)
                     {
-                        foreach (var gps in Session.GPS.GetGpsList(Session.Player.IdentityId))
-                            if (gps.Description == gpsDesc)
-                                Session.GPS.RemoveLocalGps(gps);
+                        RemoveMarkers();
                         return;
                     }
                     foreach (var result in results)

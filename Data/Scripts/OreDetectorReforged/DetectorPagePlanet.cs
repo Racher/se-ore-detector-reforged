@@ -13,8 +13,8 @@ namespace OreDetectorReforged
 {
     class DetectorPagePlanet : IDetectorPage
     {
-        const int voxelContentMin = 96;
-        const int biomeRepeatDivisor = 25;
+        byte voxelContentMin;
+        int biomeRepeatDivisor;
         readonly MyPlanet planet;
         readonly int face;
         readonly int div;
@@ -41,13 +41,13 @@ namespace OreDetectorReforged
             this.face = face;
             MyDefinitionManager.Static.GetOreTypeNames(out oreTypeNames);
             oreTypeNames[Array.IndexOf(oreTypeNames, "Stone")] = "a";
-            var genOres = PlanetMatHelper.planetGeneratedOres.Get(planet);
+            var whitelist = PlanetMatHelper.planetGeneratedOres.Get(planet);
             orePyramids = new BitArray[oreTypeNames.Length];
             heightCompressor = LinearCompressor.FromMinMax(planet.MinimumRadius - planet.Generator.MaterialsMaxDepth.Max, planet.MaximumRadius);
             heightMin = new byte[] { 0 };
             heightMax = new byte[] { 255 };
             for (var o = 0; o < oreTypeNames.Length; ++o)
-                if ((genOres & (1ul << o)) != 0)
+                if (whitelist[o])
                     orePyramids[o] = new BitArray(1, true);
             div = Math.Max(1, Math.Min(6, (int)Math.Round(planet.AverageRadius / 10000)));
         }
@@ -67,6 +67,8 @@ namespace OreDetectorReforged
 
         void Load()
         {
+            voxelContentMin = ConfigLoader.Static.voxelContentMinPlanet;
+            biomeRepeatDivisor = ConfigLoader.Static.biomeRepeatDivisor;
             storageData.Resize(Vector3I.One * 2);
             var t0 = Stopwatch.GetTimestamp();
             var png = PlanetMatHelper.LoadPlanetFacePng(planet.Generator, face);

@@ -1,32 +1,22 @@
-﻿using VRage.Game;
-using VRageMath;
-using VRage.Game.Components;
-using System.Collections.Generic;
+﻿using VRageMath;
 using Sandbox.Game.Entities;
-using VRage.ObjectBuilders;
-using VRage.Utils;
-using Sandbox.Game.World.Generator;
-using Sandbox.Engine.Voxels;
 using System.Collections;
-using VRage.ModAPI;
 using System;
-using System.Linq;
 using Sandbox.ModAPI;
 using Sandbox.Definitions;
-using System.Diagnostics;
 using VRage.Voxels;
 
 namespace OreDetectorReforged
 {
     class DetectorPageNotPlanet : IDetectorPage
     {
-        const int voxelContentMin = 96;
         readonly MyVoxelBase vb;
         readonly BitArray[] pyramids;
         readonly byte[] orePalette = new byte[256];
         readonly MyStorageData storageData = new MyStorageData();
         readonly BitArray currMat = new BitArray(256);
         readonly string[] oreTypeNames;
+        byte voxelContentMin;
         bool loaded;
         int topw;
         ushort page;
@@ -38,14 +28,14 @@ namespace OreDetectorReforged
         {
             storageData.Resize(Vector3I.One * 4);
             MyDefinitionManager.Static.GetOreTypeNames(out oreTypeNames);
-            var oreMask = vb.BoulderInfo != null
+            var whitelist = vb.BoulderInfo != null
                 ? PlanetMatHelper.planetGeneratedOres.Get(MyAPIGateway.Entities.GetEntityById(vb.BoulderInfo.Value.PlanetId) as MyPlanet)
                 : generatedOres.Get();
             pyramids = new BitArray[oreTypeNames.Length];
             foreach (var mat in MyDefinitionManager.Static.GetVoxelMaterialDefinitions())
             {
                 var ore = Array.IndexOf(oreTypeNames, mat.MinedOre);
-                if ((oreMask & 1ul << ore) == 0)
+                if (!whitelist[ore])
                     continue;
                 orePalette[mat.Index] = (byte)(ore + 1);
                 if (pyramids[ore] == null)
@@ -75,6 +65,7 @@ namespace OreDetectorReforged
 
         void Load()
         {
+            voxelContentMin = ConfigLoader.Static.voxelContentMinNotPlanet;
             loaded = true;
             var itmax = (vb.Size - 1) / 16;
             var resolution = Math.Max(2, itmax.AbsMax() + 1);
@@ -194,18 +185,17 @@ namespace OreDetectorReforged
                 throw new Exception();
         }
 
-        public static PermaCache<ulong> generatedOres = new PermaCache<ulong>(() =>
+        public static PermaCache<BitArray> generatedOres = new PermaCache<BitArray>(() =>
         {
             string[] oreTypeNames;
             MyDefinitionManager.Static.GetOreTypeNames(out oreTypeNames);
             var stoneIdx = Array.IndexOf(oreTypeNames, "Stone");
-            var generatedOres = 0ul;
+            var generatedOres = new BitArray(128);
             foreach (var mat in MyDefinitionManager.Static.GetVoxelMaterialDefinitions())
             {
-                if (!mat.SpawnsInAsteroids) continue;
                 var ore = Array.IndexOf(oreTypeNames, mat.MinedOre);
-                if (ore == stoneIdx) continue;
-                generatedOres |= 1ul << ore;
+                if (ore != stoneIdx && mat.SpawnsInAsteroids)
+                    generatedOres[ore] = true;
             }
             return generatedOres;
         });

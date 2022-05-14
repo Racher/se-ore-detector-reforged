@@ -1,14 +1,11 @@
-﻿using VRage.Game;
-using VRage.Game.Components;
+﻿using VRage.Game.Components;
 using System.Collections.Generic;
 using Sandbox.Game.Entities;
-using VRage.ObjectBuilders;
-using System;
 using System.Linq;
 
 namespace OreDetectorReforged
 {
-    class DetectorComponent : MyGameLogicComponent
+    class DetectorComponent : MyComponentBase
     {
         public readonly IDetectorPage[] data;
 

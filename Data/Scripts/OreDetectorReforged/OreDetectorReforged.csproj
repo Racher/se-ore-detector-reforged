@@ -83,6 +83,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="LegacyGpsCleaner.cs" />
+    <Compile Include="Config.cs" />
+    <Compile Include="ConfigLoader.cs" />
     <Compile Include="TerminalSession.cs" />
     <Compile Include="LinearCompressor.cs" />
     <Compile Include="DetectorPagePlanet.cs" />

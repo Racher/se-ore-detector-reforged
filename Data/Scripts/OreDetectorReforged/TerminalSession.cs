@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Sandbox.Definitions;
 using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents;
-using Sandbox.Game.Gui;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using VRage.Game;
@@ -14,8 +14,6 @@ using VRageMath;
 
 namespace OreDetectorReforged
 {
-
-
 	[MySessionComponentDescriptor(MyUpdateOrder.NoUpdate)]
 	class TerminalSession : MySessionComponentBase
 	{
@@ -34,10 +32,18 @@ namespace OreDetectorReforged
 			}
 		}
 
-		public static T GetLocalOrNew<T>(IMyEntity entity) where T : new()
+		static T GetLocalOrNew<T>(IMyEntity entity) where T : new()
 		{
 			var r = GetLocal<T>(entity);
 			return r != null ? r : new T();
+		}
+
+		public static DetectorBlockStorage GetLocalOrNewDet(IMyTerminalBlock entity)
+		{
+			var r = GetLocalOrNew<DetectorBlockStorage>(entity);
+			r.range = Math.Min(r.range, GetMaxRange(entity));
+			r.count = Math.Min(r.count, ConfigLoader.Static.maxCount);
+			return r;
 		}
 
 		public override void Init(MyObjectBuilder_SessionComponent sessionComponent)
@@ -117,6 +123,8 @@ namespace OreDetectorReforged
 				MyAPIGateway.Multiplayer.SendMessageToServer(msgHandlerId, BitConverter.GetBytes(entity.EntityId));
 		}
 
+		static float GetMaxRange(IMyTerminalBlock e) => e.CubeGrid.GridSizeEnum == MyCubeSize.Small ? ConfigLoader.Static.maxRangeSmall : ConfigLoader.Static.maxRangeLarge;
+
 		static Action InitIMyOreDetector = () =>
 		{
 			InitIMyOreDetector = null;
@@ -129,8 +137,8 @@ namespace OreDetectorReforged
 				const string id = "Reforged: GPSColor";
 				var p = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlColor, IMyOreDetector>(id);
 				p.Title = MyStringId.GetOrCompute(id);
-				p.Getter = (e) => GetLocalOrNew<DetectorBlockStorage>(e).color;
-				p.Setter = (e, v) => SetAndSendMessageToOthers(e, new DetectorBlockStorage(GetLocalOrNew<DetectorBlockStorage>(e)) { color = v });
+				p.Getter = (e) => GetLocalOrNewDet(e).color;
+				p.Setter = (e, v) => SetAndSendMessageToOthers(e, new DetectorBlockStorage(GetLocalOrNewDet(e)) { color = v });
 				p.Tooltip = MyStringId.GetOrCompute("The same color for all mod generated ore gps");
 				MyAPIGateway.TerminalControls.AddControl<IMyOreDetector>(p);
 			}
@@ -138,12 +146,12 @@ namespace OreDetectorReforged
 				const string id = "Reforged: Range";
 				var p = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyOreDetector>(id);
 				p.Title = MyStringId.GetOrCompute(id);
-				p.Getter = (e) => GetLocalOrNew<DetectorBlockStorage>(e).range;
-				p.Setter = (e, v) => SetAndSendMessageToOthers(e, new DetectorBlockStorage(GetLocalOrNew<DetectorBlockStorage>(e)) { range = v });
-				p.SetLogLimits(1, 1e9f);
+				p.Getter = (e) => GetLocalOrNewDet(e).range;
+				p.Setter = (e, v) => SetAndSendMessageToOthers(e, new DetectorBlockStorage(GetLocalOrNewDet(e)) { range = v });
+				p.SetLogLimits((e) => 1f, GetMaxRange);
 				p.Writer = (e, sb) =>
 				{
-					sb.Append(GetLocalOrNew<DetectorBlockStorage>(e).range);
+					sb.Append(GetLocalOrNewDet(e).range);
 					sb.Append(" m");
 				};
 				MyAPIGateway.TerminalControls.AddControl<IMyOreDetector>(p);
@@ -152,12 +160,12 @@ namespace OreDetectorReforged
 				const string id = "Reforged: Count";
 				var p = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyOreDetector>(id);
 				p.Title = MyStringId.GetOrCompute(id);
-				p.Getter = (e) => GetLocalOrNew<DetectorBlockStorage>(e).count;
-				p.Setter = (e, v) => SetAndSendMessageToOthers(e, new DetectorBlockStorage(GetLocalOrNew<DetectorBlockStorage>(e)) { count = (int)v });
-				p.SetLogLimits(1, 100);
+				p.Getter = (e) => GetLocalOrNewDet(e).count;
+				p.Setter = (e, v) => SetAndSendMessageToOthers(e, new DetectorBlockStorage(GetLocalOrNewDet(e)) { count = (int)v });
+				p.SetLogLimits(1, ConfigLoader.Static.maxCount);
 				p.Writer = (e, sb) =>
 				{
-					sb.Append(GetLocalOrNew<DetectorBlockStorage>(e).count);
+					sb.Append(GetLocalOrNewDet(e).count);
 					sb.Append(" each");
 				};
 				p.Tooltip = MyStringId.GetOrCompute("Show nearest N of each mined ore");
@@ -167,13 +175,13 @@ namespace OreDetectorReforged
 				const string id = "Reforged: RefreshRate";
 				var p = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyOreDetector>(id);
 				p.Title = MyStringId.GetOrCompute(id);
-				p.Getter = (e) => 1f / GetLocalOrNew<DetectorBlockStorage>(e).period;
-				p.Setter = (e, v) => SetAndSendMessageToOthers(e, new DetectorBlockStorage(GetLocalOrNew<DetectorBlockStorage>(e)) { period = (int)Math.Ceiling(1 / v) });
+				p.Getter = (e) => 1f / GetLocalOrNewDet(e).period;
+				p.Setter = (e, v) => SetAndSendMessageToOthers(e, new DetectorBlockStorage(GetLocalOrNewDet(e)) { period = (int)Math.Ceiling(1 / v) });
 				p.SetLogLimits(0.001f, 1);
 				p.Writer = (e, sb) =>
 				{
 					sb.Append("1/");
-					sb.Append(GetLocalOrNew<DetectorBlockStorage>(e).period);
+					sb.Append(GetLocalOrNewDet(e).period);
 					sb.Append(" update");
 				};
 				p.Tooltip = MyStringId.GetOrCompute("Search and update gps every Nth update");
@@ -189,24 +197,25 @@ namespace OreDetectorReforged
 				p.Multiselect = true;
 				p.ListContent = (e, ls, ss) =>
 				{
-					var valid = PlanetMatHelper.GetGeneratedOres() | DetectorPageNotPlanet.generatedOres.Get();
-					var selected = GetLocalOrNew<DetectorBlockStorage>(e).whitelist;
+					var natural = PlanetMatHelper.GetGeneratedOres().Or(DetectorPageNotPlanet.generatedOres.Get());
+					var whitelist = GetLocalOrNewDet(e).Whitelist;
 					for (var o = 0; o < oreTypeNames.Length; ++o)
 					{
-						if ((valid & 1ul << o) == 0)
+						if (!natural[o])
 							continue;
 						var l = new MyTerminalControlListBoxItem(MyStringId.GetOrCompute(oreTypeNames[o]), new MyStringId(), o);
 						ls.Add(l);
-						if ((selected & (1ul << o)) != 0)
+						if (whitelist[o])
 							ss.Add(l);
 					}
 				};
 				p.ItemSelected = (e, ss) =>
 				{
-					var v = GetLocalOrNew<DetectorBlockStorage>(e);
-					v.whitelist = 0;
+					var v = GetLocalOrNewDet(e);
+					var whitelist = new BitArray(128);
 					foreach (var l in ss)
-						v.whitelist |= 1ul << (int)l.UserData;
+						whitelist[(int)l.UserData] = true;
+					v.Whitelist = whitelist;
 					SetAndSendMessageToOthers(e, v);
 				};
 				MyAPIGateway.TerminalControls.AddControl<IMyOreDetector>(p);
@@ -221,11 +230,11 @@ namespace OreDetectorReforged
 						e.Components.Add(comp = new LegacyOresComponent());
 					string[] oreTypeNames;
 					MyDefinitionManager.Static.GetOreTypeNames(out oreTypeNames);
-					var valid = PlanetMatHelper.GetGeneratedOres() | DetectorPageNotPlanet.generatedOres.Get();
+					var valid = PlanetMatHelper.GetGeneratedOres().Or(DetectorPageNotPlanet.generatedOres.Get());
 					var ores = comp.ores;
 					for (var o = 0; o < oreTypeNames.Length; ++o)
 					{
-						if ((valid & 1ul << o) == 0)
+						if (!valid[o])
 							continue;
 						var ore = oreTypeNames[o];
 						DetectorServer.Add(new SearchTask(new BoundingSphereD(e.GetPosition(), 3e4), ore, 1, (vs) =>

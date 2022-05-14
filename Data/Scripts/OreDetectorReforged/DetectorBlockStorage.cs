@@ -1,6 +1,5 @@
 ﻿using ProtoBuf;
-using Sandbox.Definitions;
-using System;
+using System.Collections;
 using VRageMath;
 
 namespace OreDetectorReforged
@@ -21,14 +20,42 @@ namespace OreDetectorReforged
 		public int count = 1;
 
 		[ProtoMember(5)]
-		public ulong whitelist;
+		int whitelist0;
+
+		[ProtoMember(6)]
+		int whitelist1;
+
+		[ProtoMember(7)]
+		int whitelist2;
+
+		[ProtoMember(8)]
+		int whitelist3;
+
+		readonly int[] buf = new int[4];
 
 		public DetectorBlockStorage()
 		{
-			var valid = PlanetMatHelper.GetGeneratedOres() | DetectorPageNotPlanet.generatedOres.Get();
-			for (var o = 0; o < 64; ++o)
-				if ((valid & 1ul << o) != 0)
-					whitelist |= 1ul << o;
+			Whitelist = PlanetMatHelper.GetGeneratedOres().Or(DetectorPageNotPlanet.generatedOres.Get());
+		}
+
+		public BitArray Whitelist
+		{
+			get
+			{
+				buf[0] = whitelist0;
+				buf[1] = whitelist1;
+				buf[2] = whitelist2;
+				buf[3] = whitelist3;
+				return new BitArray(buf);
+			}
+			set
+			{
+				value.CopyTo(buf, 0);
+				whitelist0 = buf[0];
+				whitelist1 = buf[1];
+				whitelist2 = buf[2];
+				whitelist3 = buf[3];
+			}
 		}
 
 		public DetectorBlockStorage(DetectorBlockStorage other)
@@ -37,7 +64,10 @@ namespace OreDetectorReforged
 			period = other.period;
 			color = other.color;
 			count = other.count;
-			whitelist = other.whitelist;
+			whitelist0 = other.whitelist0;
+			whitelist1 = other.whitelist1;
+			whitelist2 = other.whitelist2;
+			whitelist3 = other.whitelist3;
 		}
 	}
 }

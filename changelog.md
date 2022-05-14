@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2] - 2022-05-14
+### Fixed
+- Union settings when using multiple ore detectors
+- Remove markers when none is active
+- Increase whitelist size to 128bit
+- Config refactor
+
 ## [2.0.1] - 2022-05-10
 ### Fixed
 - Fix multiplayer disconnect ModStorage KeyNotFound

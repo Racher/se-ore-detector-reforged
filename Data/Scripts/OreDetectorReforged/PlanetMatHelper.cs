@@ -59,7 +59,7 @@ namespace OreDetectorReforged
             var length = surfacePos.Length();
             var height = (length - planet.MinimumRadius) / (planet.MaximumRadius - planet.MinimumRadius);
             var sinLat = (float)(surfacePos.Y / length);
-            var cosSlope = (float)ShapeNormalZ(planet,surfacePos);
+            var cosSlope = (float)ShapeNormalZ(planet, surfacePos);
             return materialRules.FirstOrDefault(r => r.Check(height, sinLat, cosSlope));
         }
 
@@ -107,17 +107,17 @@ namespace OreDetectorReforged
             return (float)(spos.Length() - depth / ShapeNormalZ(planet, spos));
         }
 
-        static ulong GetGeneratedOres(MyPlanet planet)
+        static BitArray GetGeneratedOres(MyPlanet planet)
         {
             string[] oreTypeNames;
             MyDefinitionManager.Static.GetOreTypeNames(out oreTypeNames);
             var stoneIdx = Array.IndexOf(oreTypeNames, "Stone");
-            var generatedOres = 0ul;
+            var generatedOres = new BitArray(128);
             Action<string> Add = (material) =>
             {
                 var i = Array.IndexOf(oreTypeNames, MyDefinitionManager.Static.GetVoxelMaterialDefinition(material).MinedOre);
                 if (i != stoneIdx)
-                    generatedOres |= 1ul << i;
+                    generatedOres[i] = true;
             };
             foreach (var oreChannel in planet.Generator.OreMappings)
                 Add(oreChannel.Type);
@@ -127,24 +127,17 @@ namespace OreDetectorReforged
                         Add(layer.Material);
             return generatedOres;
         }
-        public static PermaCache<MyPlanet, ulong> planetGeneratedOres = new PermaCache<MyPlanet, ulong>(GetGeneratedOres);
+        public static PermaCache<MyPlanet, BitArray> planetGeneratedOres = new PermaCache<MyPlanet, BitArray>(GetGeneratedOres);
 
-        public static ulong GetGeneratedOres()
+        public static BitArray GetGeneratedOres()
         {
             var universe = new BoundingSphereD(new Vector3D(), double.MaxValue);
             var vbs = new List<MyVoxelBase>();
             MyGamePruningStructure.GetAllVoxelMapsInSphere(ref universe, vbs);
-            var union = 0ul;
+            var union = new BitArray(128);
             foreach (var vb in vbs)
-            {
-                if (vb.RootVoxel != vb)
-                    continue;
-                var planet = vb as MyPlanet;
-                if (planet == null)
-                    continue;
-                var other = planetGeneratedOres.Get(planet);
-                union |= other;
-            }
+                if (vb.RootVoxel == vb && (vb as MyPlanet) != null)
+                    union.Or(planetGeneratedOres.Get(vb as MyPlanet));
             return union;
         }
     }
