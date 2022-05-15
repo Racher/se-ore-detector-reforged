@@ -2,7 +2,6 @@
 using System;
 using Sandbox.ModAPI;
 using VRageMath;
-using Sandbox.Definitions;
 using System.Collections.Generic;
 
 namespace OreDetectorReforged
@@ -67,11 +66,8 @@ namespace OreDetectorReforged
                 RemoveMarkers();
                 return;
             }
-            string[] oreNames;
-            MyDefinitionManager.Static.GetOreTypeNames(out oreNames);
-            var searchOres = new List<int>(oreNames.Length);
-            var l = Math.Min(oreNames.Length, settings.count.Length);
-            for (var i = 0; i < l; ++i)
+            var searchOres = new List<int>(MaterialMappingHelper.Static.naturalOres.Length);
+            for (var i = 0; i < MaterialMappingHelper.Static.naturalOres.Length; ++i)
                 if (settings.count[i] > 0)
                     searchOres.Add(i);
             var bucket = (int)(counter % settings.period);
@@ -80,7 +76,7 @@ namespace OreDetectorReforged
             for (var j = start; j < end; ++j)
             {
                 var i = searchOres[j];
-                var ore = oreNames[i];
+                var ore = MaterialMappingHelper.Static.naturalOres[i];
                 var area = new BoundingSphereD(position, settings.range[i]);
                 if (area.Radius < 2)
                     continue;

@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using VRageMath;
 using Sandbox.Game.Entities;
-using Sandbox.Definitions;
 using System.Diagnostics;
 using VRage.Game;
 using System.Collections.Concurrent;
@@ -65,20 +64,21 @@ namespace OreDetectorReforged
                     var sliceEnd = Stopwatch.GetTimestamp() + TimeSpan.FromMilliseconds(15).Ticks;
                     do
                     {
-                        string[] oreNames;
-                        MyDefinitionManager.Static.GetOreTypeNames(out oreNames);
-                        var ore = Array.IndexOf(oreNames, task.minedOre);
-                        for (var page = 0; page < task.pages.Count; ++page)
-                            task.pages[page].Setup(pq, task.area.Center, page, ore);
-                        while (pq.Count > 0)
+                        var ore = Array.IndexOf(MaterialMappingHelper.Static.naturalOres, task.minedOre);
+                        if (ore != -1)
                         {
-                            var r = task.pages[pq.Top.p].Pop();
-                            if (r.IsZero())
-                                continue;
-                            if (task.area.Contains(r) == ContainmentType.Disjoint || !task.resultCb(r))
-                                break;
+                            for (var page = 0; page < task.pages.Count; ++page)
+                                task.pages[page].Setup(pq, task.area.Center, page, ore);
+                            while (pq.Count > 0)
+                            {
+                                var r = task.pages[pq.Top.p].Pop();
+                                if (r.IsZero())
+                                    continue;
+                                if (task.area.Contains(r) == ContainmentType.Disjoint || !task.resultCb(r))
+                                    break;
+                            }
+                            pq.Clear();
                         }
-                        pq.Clear();
                         finished.Enqueue(task);
                     }
                     while (Stopwatch.GetTimestamp() < sliceEnd && tasks.TryTake(out task));

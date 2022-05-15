@@ -14,15 +14,9 @@ namespace OreDetectorReforged
         {
             if (MyAPIGateway.Session.GPS == null || MyAPIGateway.Session.Player == null)
                 return;
-            string[] oreNames;
-            MyDefinitionManager.Static.GetOreTypeNames(out oreNames);
-            var blacklist = new HashSet<string>(oreNames)
-            {
-                "OreDetectorReforgedConfig"
-            };
             foreach (var gps in MyAPIGateway.Session.GPS.GetGpsList(MyAPIGateway.Session.Player.IdentityId))
             {
-                if (gps.Coords != Vector3D.Zero || !blacklist.Contains(gps.Name))
+                if (gps.Coords != Vector3D.Zero || gps.Name != "OreDetectorReforgedConfig")
                     continue;
                 MyAPIGateway.Session.GPS.RemoveGps(MyAPIGateway.Session.Player.IdentityId, gps.Hash);
                 MyAPIGateway.Session.GPS.RemoveLocalGps(gps.Hash);

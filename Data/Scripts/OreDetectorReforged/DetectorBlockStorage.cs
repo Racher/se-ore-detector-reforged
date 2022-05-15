@@ -35,7 +35,7 @@ namespace OreDetectorReforged
 
 		public DetectorBlockStorage()
 		{
-			Whitelist = PlanetMatHelper.GetGeneratedOres().Or(DetectorPageNotPlanet.generatedOres.Get());
+			Whitelist = new BitArray(128, true);
 		}
 
 		public BitArray Whitelist

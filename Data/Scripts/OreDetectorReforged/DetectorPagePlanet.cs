@@ -19,7 +19,6 @@ namespace OreDetectorReforged
         readonly int face;
         readonly int div;
         readonly BitArray[] orePyramids;
-        readonly string[] oreTypeNames;
         readonly LinearCompressor heightCompressor;
         readonly MyStorageData storageData = new MyStorageData();
         int topz = 12;
@@ -39,14 +38,12 @@ namespace OreDetectorReforged
         {
             this.planet = planet;
             this.face = face;
-            MyDefinitionManager.Static.GetOreTypeNames(out oreTypeNames);
-            oreTypeNames[Array.IndexOf(oreTypeNames, "Stone")] = "a";
-            var whitelist = PlanetMatHelper.planetGeneratedOres.Get(planet);
-            orePyramids = new BitArray[oreTypeNames.Length];
+            var whitelist = MaterialMappingHelper.Static.planetWhitelists[planet.Generator];
+            orePyramids = new BitArray[MaterialMappingHelper.Static.naturalOres.Length];
             heightCompressor = LinearCompressor.FromMinMax(planet.MinimumRadius - planet.Generator.MaterialsMaxDepth.Max, planet.MaximumRadius);
             heightMin = new byte[] { 0 };
             heightMax = new byte[] { 255 };
-            for (var o = 0; o < oreTypeNames.Length; ++o)
+            for (var o = 0; o < orePyramids.Length; ++o)
                 if (whitelist[o])
                     orePyramids[o] = new BitArray(1, true);
             div = Math.Max(1, Math.Min(6, (int)Math.Round(planet.AverageRadius / 10000)));
@@ -84,18 +81,18 @@ namespace OreDetectorReforged
             {
                 ++lastId;
                 matPalette[lastId] = mat;
-                orePalette[lastId] = (byte)Array.IndexOf(oreTypeNames, MyDefinitionManager.Static.GetVoxelMaterialDefinition(mat).MinedOre);
+                orePalette[lastId] = MaterialMappingHelper.Static.matIdxToOreIdx[mat];
                 depthPalette[lastId] = depth;
                 return lastId;
             });
             var blueToGray = new byte[256];
             foreach (var oreChannel in planet.Generator.OreMappings)
             {
-                var def = MyDefinitionManager.Static.GetVoxelMaterialDefinition(oreChannel.Type);
-                if (Array.IndexOf(oreTypeNames, def.MinedOre) == -1)
-                    continue;
                 var depth = oreChannel.Start + oreChannel.Depth - Math.Min(2, oreChannel.Depth / 2);
-                var gray = palette.Get(def.Index, depth);
+                var m = MyDefinitionManager.Static.GetVoxelMaterialDefinition(oreChannel.Type).Index;
+                if (MaterialMappingHelper.Static.matIdxToOreIdx[m] == 255)
+                    continue;
+                var gray = palette.Get(m, depth);
                 if (gray >= 256)
                     continue;
                 blueToGray[oreChannel.Value] = (byte)gray;
@@ -110,21 +107,23 @@ namespace OreDetectorReforged
                     {
                         Value = 0
                     };
-                    MyPlanetMaterialLayer orelayer = rule.Layers.LastOrDefault(layer => GetOreIdx(layer.Material) != 255);
-                    if (orelayer.Equals(default(MyPlanetMaterialLayer)))
-                        continue;
-                    var def = MyDefinitionManager.Static.GetVoxelMaterialDefinition(orelayer.Material);
-                    if (Array.IndexOf(oreTypeNames, def.MinedOre) == -1)
+                    var orelayer = new MyPlanetMaterialLayer();
+                    foreach (var layer in rule.Layers)
+                        if (MaterialMappingHelper.Static.matIdxToOreIdx[MyDefinitionManager.Static.GetVoxelMaterialDefinition(layer.Material).Index] != 255)
+                            orelayer = layer;
+                    if (orelayer.Equals(new MyPlanetMaterialLayer()))
                         continue;
                     var depth = orelayer.Depth - 2;
-                    var gray = palette.Get(def.Index, depth);
+                    var gray = palette.Get(MyDefinitionManager.Static.GetVoxelMaterialDefinition(orelayer.Material).Index, depth);
                     if (gray >= 256)
                         continue;
                     rule.Value = (byte)gray;
+                    if (gray == 0)
+                        throw new Exception();
                     redToRules[biome.Value] = rules;
                 }
             }
-            for (var o = 0; o < oreTypeNames.Length; ++o)
+            for (var o = 0; o < orePyramids.Length; ++o)
             {
                 if (orePyramids[o] == null)
                     continue;
@@ -241,8 +240,6 @@ namespace OreDetectorReforged
                     return true;
             return false;
         }
-
-        byte GetOreIdx(string material) => (byte)(material == null ? -1 : Array.IndexOf(oreTypeNames, MyDefinitionManager.Static.GetVoxelMaterialDefinition(material).MinedOre));
 
         static int IndexToPyarmidLinear(int x, int y, int z) => (((1 << (2 * z)) - 1) / 3) + (y << z) + x;
 

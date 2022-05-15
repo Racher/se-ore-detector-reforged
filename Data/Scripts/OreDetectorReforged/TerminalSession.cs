@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Sandbox.Definitions;
 using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
@@ -188,8 +187,6 @@ namespace OreDetectorReforged
 				MyAPIGateway.TerminalControls.AddControl<IMyOreDetector>(p);
 			}
 			{
-				string[] oreTypeNames;
-				MyDefinitionManager.Static.GetOreTypeNames(out oreTypeNames);
 				const string id = "Reforged: Whitelist";
 				var p = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlListbox, IMyOreDetector>(id);
 				p.Title = MyStringId.GetOrCompute(id);
@@ -197,13 +194,10 @@ namespace OreDetectorReforged
 				p.Multiselect = true;
 				p.ListContent = (e, ls, ss) =>
 				{
-					var natural = PlanetMatHelper.GetGeneratedOres().Or(DetectorPageNotPlanet.generatedOres.Get());
 					var whitelist = GetLocalOrNewDet(e).Whitelist;
-					for (var o = 0; o < oreTypeNames.Length; ++o)
+					for (var o = 0; o < MaterialMappingHelper.Static.naturalOres.Length; ++o)
 					{
-						if (!natural[o])
-							continue;
-						var l = new MyTerminalControlListBoxItem(MyStringId.GetOrCompute(oreTypeNames[o]), new MyStringId(), o);
+						var l = new MyTerminalControlListBoxItem(MyStringId.GetOrCompute(MaterialMappingHelper.Static.naturalOres[o]), new MyStringId(), o);
 						ls.Add(l);
 						if (whitelist[o])
 							ss.Add(l);
@@ -228,21 +222,13 @@ namespace OreDetectorReforged
 					var comp = e.Components.Get<LegacyOresComponent>();
 					if (comp == null)
 						e.Components.Add(comp = new LegacyOresComponent());
-					string[] oreTypeNames;
-					MyDefinitionManager.Static.GetOreTypeNames(out oreTypeNames);
-					var valid = PlanetMatHelper.GetGeneratedOres().Or(DetectorPageNotPlanet.generatedOres.Get());
 					var ores = comp.ores;
-					for (var o = 0; o < oreTypeNames.Length; ++o)
-					{
-						if (!valid[o])
-							continue;
-						var ore = oreTypeNames[o];
+					foreach (var ore in MaterialMappingHelper.Static.naturalOres)
 						DetectorServer.Add(new SearchTask(new BoundingSphereD(e.GetPosition(), 3e4), ore, 1, (vs) =>
 						{
 							if (vs.Count > 0)
 								ores[ore] = vs[0];
 						}));
-					}
 					return new Dictionary<string, Vector3D>(comp.ores);
 				};
 				MyAPIGateway.TerminalControls.AddControl<IMyOreDetector>(p);

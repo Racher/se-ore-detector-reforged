@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.3] - 2022-05-15
+### Fixed
+- Ore index overflow with AwwScrap
+
 ## [2.0.2] - 2022-05-14
 ### Fixed
 - Union settings when using multiple ore detectors

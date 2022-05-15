@@ -8,9 +8,6 @@ using VRage.Game;
 using VRage.Game.Components;
 using System.Linq;
 using Sandbox.Game.Entities;
-using System.Diagnostics;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace OreDetectorReforged
 {
@@ -105,40 +102,6 @@ namespace OreDetectorReforged
         {
             var spos = planet.GetClosestSurfacePointLocal(ref cpos);
             return (float)(spos.Length() - depth / ShapeNormalZ(planet, spos));
-        }
-
-        static BitArray GetGeneratedOres(MyPlanet planet)
-        {
-            string[] oreTypeNames;
-            MyDefinitionManager.Static.GetOreTypeNames(out oreTypeNames);
-            var stoneIdx = Array.IndexOf(oreTypeNames, "Stone");
-            var generatedOres = new BitArray(128);
-            Action<string> Add = (material) =>
-            {
-                var i = Array.IndexOf(oreTypeNames, MyDefinitionManager.Static.GetVoxelMaterialDefinition(material).MinedOre);
-                if (i != stoneIdx)
-                    generatedOres[i] = true;
-            };
-            foreach (var oreChannel in planet.Generator.OreMappings)
-                Add(oreChannel.Type);
-            foreach (var biome in planet.Generator.MaterialGroups)
-                foreach (var rule in biome.MaterialRules)
-                    foreach (var layer in rule.Layers)
-                        Add(layer.Material);
-            return generatedOres;
-        }
-        public static PermaCache<MyPlanet, BitArray> planetGeneratedOres = new PermaCache<MyPlanet, BitArray>(GetGeneratedOres);
-
-        public static BitArray GetGeneratedOres()
-        {
-            var universe = new BoundingSphereD(new Vector3D(), double.MaxValue);
-            var vbs = new List<MyVoxelBase>();
-            MyGamePruningStructure.GetAllVoxelMapsInSphere(ref universe, vbs);
-            var union = new BitArray(128);
-            foreach (var vb in vbs)
-                if (vb.RootVoxel == vb && (vb as MyPlanet) != null)
-                    union.Or(planetGeneratedOres.Get(vb as MyPlanet));
-            return union;
         }
     }
 }
