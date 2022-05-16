@@ -45,7 +45,7 @@ namespace OreDetectorReforged
                         foreach (var layer in rule.Layers)
                             ores.Add(layer.Material);
             }
-            ores = new HashSet<string>(ores.Select(s => MyDefinitionManager.Static.GetVoxelMaterialDefinition(s).MinedOre));
+            ores = new HashSet<string>(ores.Select(s => MyDefinitionManager.Static.GetVoxelMaterialDefinition(s)?.MinedOre));
             foreach (var mat in MyDefinitionManager.Static.GetVoxelMaterialDefinitions())
                 if (mat.SpawnsFromMeteorites)
                     ores.Add(mat.MinedOre);
@@ -71,7 +71,8 @@ namespace OreDetectorReforged
                 var whitelist = new BitArray(128);
                 Action<string> Add = (material) =>
                 {
-                    var i = matIdxToOreIdx[MyDefinitionManager.Static.GetVoxelMaterialDefinition(material).Index];
+                    var d = MyDefinitionManager.Static.GetVoxelMaterialDefinition(material);
+                    var i = d == null ? 255 : matIdxToOreIdx[d.Index];
                     if (i < 128)
                         whitelist[i] = true;
                 };

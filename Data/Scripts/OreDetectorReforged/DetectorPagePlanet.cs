@@ -109,8 +109,11 @@ namespace OreDetectorReforged
                     };
                     var orelayer = new MyPlanetMaterialLayer();
                     foreach (var layer in rule.Layers)
-                        if (MaterialMappingHelper.Static.matIdxToOreIdx[MyDefinitionManager.Static.GetVoxelMaterialDefinition(layer.Material).Index] != 255)
+                    {
+                        var d = MyDefinitionManager.Static.GetVoxelMaterialDefinition(layer.Material);
+                        if (d != null && MaterialMappingHelper.Static.matIdxToOreIdx[d.Index] != 255)
                             orelayer = layer;
+                    }
                     if (orelayer.Equals(new MyPlanetMaterialLayer()))
                         continue;
                     var depth = orelayer.Depth - 2;

@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.4] - 2022-05-16
+### Fixed
+- Skip invalid material on (Planet 26)
+
 ## [2.0.3] - 2022-05-15
 ### Fixed
 - Ore index overflow with AwwScrap
