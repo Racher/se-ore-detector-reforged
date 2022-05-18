@@ -19,7 +19,7 @@ namespace OreDetectorReforged
 {
 
     [MySessionComponentDescriptor(MyUpdateOrder.NoUpdate)]
-    class TestPlanetOreGeneration : MySessionComponentBase
+    class PlanetOreGenerationTest : MySessionComponentBase
     {
         Vector3D prevp;
 

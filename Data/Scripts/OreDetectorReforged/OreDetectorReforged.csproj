@@ -86,6 +86,8 @@
     <Compile Include="Config.cs" />
     <Compile Include="ConfigLoader.cs" />
     <Compile Include="MaterialMappingHelper.cs" />
+    <Compile Include="PlanetCubemapHelperTest.cs" />
+    <Compile Include="PlanetMatHelperTest.cs" />
     <Compile Include="TerminalSession.cs" />
     <Compile Include="LinearCompressor.cs" />
     <Compile Include="DetectorPagePlanet.cs" />
@@ -93,7 +95,7 @@
     <Compile Include="Node.cs" />
     <Compile Include="DetectorServer.cs" />
     <Compile Include="SearchTask.cs" />
-    <Compile Include="TestPlanetOreGeneration.cs" />
+    <Compile Include="PlanetOreGenerationTest.cs" />
     <Compile Include="DetectorPageNotPlanet.cs" />
     <Compile Include="IDetectorPage.cs" />
     <Compile Include="Microsoft\PriorityQueue.cs" />
