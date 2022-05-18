@@ -8,7 +8,7 @@ using VRage.Game;
 using System.Collections.Concurrent;
 using Sandbox.ModAPI;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector
 {
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     class DetectorServer : MySessionComponentBase

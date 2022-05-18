@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using VRageMath;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector
 {
     class SearchTask
     {

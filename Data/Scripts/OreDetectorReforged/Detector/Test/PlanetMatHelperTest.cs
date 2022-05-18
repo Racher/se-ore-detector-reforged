@@ -5,7 +5,7 @@ using VRage.Game.Components;
 using System.Linq;
 using Sandbox.Game.Entities;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector.Test
 {
     [MySessionComponentDescriptor(MyUpdateOrder.NoUpdate)]
     class PlanetMatHelperTest : MySessionComponentBase

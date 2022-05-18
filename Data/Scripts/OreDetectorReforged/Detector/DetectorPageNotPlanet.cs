@@ -6,7 +6,7 @@ using Sandbox.ModAPI;
 using Sandbox.Definitions;
 using VRage.Voxels;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector
 {
     class DetectorPageNotPlanet : IDetectorPage
     {

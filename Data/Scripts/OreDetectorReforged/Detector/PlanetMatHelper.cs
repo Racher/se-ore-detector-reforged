@@ -8,7 +8,7 @@ using VRage.Game;
 using System.Linq;
 using Sandbox.Game.Entities;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector
 {
     static class PlanetMatHelper
     {

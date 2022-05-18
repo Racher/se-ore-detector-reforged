@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Sandbox.Game.Entities;
 using System.Linq;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector
 {
     class DetectorComponent : MyComponentBase
     {

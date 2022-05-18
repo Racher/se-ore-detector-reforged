@@ -4,7 +4,7 @@ using System;
 using VRage.Game.Components;
 using VRageMath;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector.Test
 {
     [MySessionComponentDescriptor(MyUpdateOrder.NoUpdate)]
     class PlanetCubemapHelperTest : MySessionComponentBase

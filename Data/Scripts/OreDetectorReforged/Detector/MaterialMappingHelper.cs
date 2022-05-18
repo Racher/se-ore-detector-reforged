@@ -5,7 +5,7 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector
 {
     class MaterialMappingHelper
     {

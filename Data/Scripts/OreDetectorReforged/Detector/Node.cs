@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector
 {
     struct Node
     {

@@ -15,7 +15,7 @@ using Sandbox.Definitions;
 using VRage.Game;
 using VRage.Utils;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector.Test
 {
 
     [MySessionComponentDescriptor(MyUpdateOrder.NoUpdate)]

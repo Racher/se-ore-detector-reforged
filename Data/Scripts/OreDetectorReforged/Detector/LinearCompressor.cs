@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector
 {
     struct LinearCompressor
     {

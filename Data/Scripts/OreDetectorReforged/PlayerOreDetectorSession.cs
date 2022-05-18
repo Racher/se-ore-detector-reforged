@@ -3,6 +3,7 @@ using System;
 using Sandbox.ModAPI;
 using VRageMath;
 using System.Collections.Generic;
+using OreDetectorReforged.Detector;
 
 namespace OreDetectorReforged
 {

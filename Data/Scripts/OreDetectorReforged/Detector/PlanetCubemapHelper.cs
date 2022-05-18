@@ -1,7 +1,7 @@
 ﻿using System;
 using VRageMath;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector
 {
 
     static class PlanetCubemapHelper

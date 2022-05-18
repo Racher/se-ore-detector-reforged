@@ -9,7 +9,7 @@ using System.Linq;
 using Sandbox.ModAPI;
 using VRage.Voxels;
 
-namespace OreDetectorReforged
+namespace OreDetectorReforged.Detector
 {
     class DetectorPagePlanet : IDetectorPage
     {

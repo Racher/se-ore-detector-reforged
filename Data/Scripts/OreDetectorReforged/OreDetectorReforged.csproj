@@ -82,27 +82,26 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LegacyGpsCleaner.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="ConfigLoader.cs" />
-    <Compile Include="MaterialMappingHelper.cs" />
-    <Compile Include="PlanetCubemapHelperTest.cs" />
-    <Compile Include="PlanetMatHelperTest.cs" />
+    <Compile Include="Detector\MaterialMappingHelper.cs" />
+    <Compile Include="Detector\Test\PlanetCubemapHelperTest.cs" />
+    <Compile Include="Detector\Test\PlanetMatHelperTest.cs" />
     <Compile Include="TerminalSession.cs" />
-    <Compile Include="LinearCompressor.cs" />
-    <Compile Include="DetectorPagePlanet.cs" />
+    <Compile Include="Detector\LinearCompressor.cs" />
+    <Compile Include="Detector\DetectorPagePlanet.cs" />
     <Compile Include="DetectorBlockStorage.cs" />
-    <Compile Include="Node.cs" />
-    <Compile Include="DetectorServer.cs" />
-    <Compile Include="SearchTask.cs" />
-    <Compile Include="PlanetOreGenerationTest.cs" />
-    <Compile Include="DetectorPageNotPlanet.cs" />
-    <Compile Include="IDetectorPage.cs" />
+    <Compile Include="Detector\Node.cs" />
+    <Compile Include="Detector\DetectorServer.cs" />
+    <Compile Include="Detector\SearchTask.cs" />
+    <Compile Include="Detector\Test\PlanetOreGenerationTest.cs" />
+    <Compile Include="Detector\DetectorPageNotPlanet.cs" />
+    <Compile Include="Detector\IDetectorPage.cs" />
     <Compile Include="Microsoft\PriorityQueue.cs" />
     <Compile Include="PermaCache.cs" />
-    <Compile Include="DetectorComponent.cs" />
-    <Compile Include="PlanetCubemapHelper.cs" />
-    <Compile Include="PlanetMatHelper.cs" />
+    <Compile Include="Detector\DetectorComponent.cs" />
+    <Compile Include="Detector\PlanetCubemapHelper.cs" />
+    <Compile Include="Detector\PlanetMatHelper.cs" />
     <Compile Include="PlayerOreDetectorSession.cs" />
     <Compile Include="BigGustavePng\Adam7.cs" />
     <Compile Include="BigGustavePng\Adler32Checksum.cs" />
@@ -129,9 +128,10 @@
     <Compile Include="BigGustavePng\StreamHelper.cs" />
     <Compile Include="BigGustavePng\Tuples.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>cd ..\
-deploy.cmd</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>
