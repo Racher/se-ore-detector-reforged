@@ -10,12 +10,12 @@ namespace OreDetectorReforged.Detector
 {
     class DetectorPageNotPlanet : IDetectorPage
     {
+        const byte voxelContentMin = 96;
         readonly MyVoxelBase vb;
         readonly BitArray[] pyramids;
         readonly byte[] orePalette = new byte[256];
         readonly MyStorageData storageData = new MyStorageData();
         readonly BitArray currMat = new BitArray(256);
-        byte voxelContentMin;
         bool loaded;
         int topw;
         ushort page;
@@ -63,7 +63,6 @@ namespace OreDetectorReforged.Detector
 
         void Load()
         {
-            voxelContentMin = ConfigLoader.Static.voxelContentMinNotPlanet;
             loaded = true;
             var itmax = (vb.Size - 1) / 16;
             var resolution = Math.Max(2, itmax.AbsMax() + 1);

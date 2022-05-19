@@ -1,5 +1,5 @@
 set out=%AppData%\SpaceEngineers\Mods\"Ore Detector Reforged Test"
-rmdir %out% /sq
+rmdir %out% /s /q
 mkdir %out%
 xcopy *.txt %out%\ /dy
 xcopy *.steamtxt %out%\ /dy
@@ -13,7 +13,7 @@ xcopy .\Data\*.csproj %out%\Data\ /sdy
 xcopy .\Data\*.sbc %out%\Data\ /sdy
 
 set out=%AppData%\SpaceEngineers\Mods\"Ore Detector Reforged"
-rmdir %out% /sq
+rmdir %out% /s /q
 mkdir %out%
 xcopy *.txt %out%\ /dy
 xcopy *.steamtxt %out%\ /dy

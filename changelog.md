@@ -1,8 +1,12 @@
-# Changelog
+## [2.1.0] - 2022-05-19
+[h1] Added [/h1]
+- Config support
+[h1] Removed [/h1]
+- UpdatePeriod terminal slider (now scans 1 ore type every 2nd update)
 
 ## [2.0.4] - 2022-05-16
 ### Fixed
-- Skip invalid material on (Planet 26)
+- Skip invalid material (Planet 26)
 
 ## [2.0.3] - 2022-05-15
 ### Fixed

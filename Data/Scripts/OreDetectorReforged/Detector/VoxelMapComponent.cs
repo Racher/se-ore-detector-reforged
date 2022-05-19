@@ -5,11 +5,11 @@ using System.Linq;
 
 namespace OreDetectorReforged.Detector
 {
-    class DetectorComponent : MyComponentBase
+    class VoxelMapComponent : MyComponentBase
     {
         public readonly IDetectorPage[] data;
 
-        public DetectorComponent(MyVoxelBase vb)
+        public VoxelMapComponent(MyVoxelBase vb)
         {
             vb.Components.Add(this);
             var planet = vb as MyPlanet;

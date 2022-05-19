@@ -5,24 +5,6 @@ using System.Collections.Generic;
 
 namespace OreDetectorReforged
 {
-    class PermaCache<TResult>
-    {
-        TResult cache;
-        Func<TResult> loader;
-        public PermaCache(Func<TResult> loader)
-        {
-            this.loader = loader;
-        }
-        public TResult Get()
-        {
-            if (loader != null)
-            {
-                cache = loader();
-                loader = null;
-            }
-            return cache;
-        }
-    }
     class PermaCache<T, TResult>
     {
         readonly Dictionary<T, TResult> cache = new Dictionary<T, TResult>();

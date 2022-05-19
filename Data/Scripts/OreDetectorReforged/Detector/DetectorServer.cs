@@ -27,7 +27,7 @@ namespace OreDetectorReforged.Detector
             {
                 if (vb.RootVoxel != vb)
                     continue;
-                var cloud = vb.Components.Get<DetectorComponent>() ?? new DetectorComponent(vb);
+                var cloud = vb.Components.Get<VoxelMapComponent>() ?? new VoxelMapComponent(vb);
                 if (cloud.data.Length > 0)
                     task.pages.AddRange(cloud.data);
             }
@@ -35,9 +35,8 @@ namespace OreDetectorReforged.Detector
             tasks.Add(task);
         }
 
-        public override void Init(MyObjectBuilder_SessionComponent sessionComponent)
+        public override void LoadData()
         {
-            base.Init(sessionComponent);
             MyAPIGateway.Parallel.StartBackground(ProcessTasks);
         }
 

@@ -32,5 +32,13 @@ namespace OreDetectorReforged.Detector
             };
             this.finishCb = () => finishCb(results);
         }
+
+        public SearchTask(ValueTuple<BoundingSphereD, string, Func<Vector3D, bool>, Action> t) : this(t.Item1, t.Item2, t.Item3, t.Item4)
+        {
+        }
+
+        public SearchTask(ValueTuple<BoundingSphereD, string, int, Action<List<Vector3D>>> t) : this(t.Item1, t.Item2, t.Item3, t.Item4)
+        {
+        }
     }
 }

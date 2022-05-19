@@ -13,8 +13,8 @@ namespace OreDetectorReforged.Detector
 {
     class DetectorPagePlanet : IDetectorPage
     {
-        byte voxelContentMin;
-        int biomeRepeatDivisor;
+        const byte voxelContentMin = 96;
+        const int biomeRepeatDivisor = 25;
         readonly MyPlanet planet;
         readonly int face;
         readonly int div;
@@ -64,8 +64,6 @@ namespace OreDetectorReforged.Detector
 
         void Load()
         {
-            voxelContentMin = ConfigLoader.Static.voxelContentMinPlanet;
-            biomeRepeatDivisor = ConfigLoader.Static.biomeRepeatDivisor;
             storageData.Resize(Vector3I.One * 2);
             var t0 = Stopwatch.GetTimestamp();
             var png = PlanetMatHelper.LoadPlanetFacePng(planet.Generator, face);
