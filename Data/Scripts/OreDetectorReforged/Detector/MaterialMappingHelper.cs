@@ -47,7 +47,7 @@ namespace OreDetectorReforged.Detector
             }
             ores = new HashSet<string>(ores.Select(s => MyDefinitionManager.Static.GetVoxelMaterialDefinition(s)?.MinedOre));
             foreach (var mat in MyDefinitionManager.Static.GetVoxelMaterialDefinitions())
-                if (mat.SpawnsFromMeteorites)
+                if (mat.SpawnsInAsteroids)
                     ores.Add(mat.MinedOre);
             ores.Remove("Stone");
             MyDefinitionManager.Static.GetOreTypeNames(out naturalOres);
@@ -91,7 +91,7 @@ namespace OreDetectorReforged.Detector
             asteroidWhitelist = new BitArray(128);
             int i;
             foreach (var mat in MyDefinitionManager.Static.GetVoxelMaterialDefinitions())
-                if (mat.SpawnsFromMeteorites && (i = matIdxToOreIdx[mat.Index]) < 128)
+                if (mat.SpawnsInAsteroids && (i = matIdxToOreIdx[mat.Index]) < 128)
                     asteroidWhitelist[i] = true;
         }
     }

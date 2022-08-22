@@ -1,3 +1,7 @@
+## [2.1.1] - 2022-08-22
+[h1] Fixed [/h1]
+- Trivial SpawnsInAsteroids bug (now searches Lord Wiader's Tiered Systems titanium)
+
 ## [2.1.0] - 2022-05-19
 [h1] Added [/h1]
 - Config support
