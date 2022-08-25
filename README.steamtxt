@@ -1,5 +1,6 @@
 Shows ores with gps signals
 Works automatically when controlled ship has a working ore detector
+Broadcast using antenna* (compromise)
 Alternative algorithm independent from default ore detection
 Reasonable performance (background thread, 1% average, 100% when loading)
 VoxelHand and Meteorites are not detected

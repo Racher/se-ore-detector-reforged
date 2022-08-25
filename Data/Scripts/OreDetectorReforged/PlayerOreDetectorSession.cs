@@ -39,9 +39,11 @@ namespace OreDetectorReforged
 
         static bool IsBlockControlled(IMyTerminalBlock e) => ShipController != null && MyAPIGateway.GridGroups.HasConnection(ShipController.CubeGrid, e.CubeGrid, GridLinkTypeEnum.Logical);
 
-        static bool CheckAntennaToLocalPlayer(IMyRadioAntenna e) => e.IsWorking && e.HasLocalPlayerAccess() && Vector3D.DistanceSquared(e.GetPosition(), MyAPIGateway.Session.Player.GetPosition()) < e.Radius * e.Radius;
+        static bool IsAntennaInRange(IMyRadioAntenna e) => Vector3D.DistanceSquared(e.GetPosition(), MyAPIGateway.Session.Player.GetPosition()) < e.Radius * e.Radius;
 
-        bool IsBroadcasted(IMyOreDetector e) => e.BroadcastUsingAntennas && antennaGrids.Any(a => MyAPIGateway.GridGroups.HasConnection(a, e.CubeGrid, GridLinkTypeEnum.Logical));
+        static bool CheckAntennaToLocalPlayer(IMyRadioAntenna e) => e.IsWorking && e.HasLocalPlayerAccess() && IsAntennaInRange(e);
+
+        bool IsBroadcasted(IMyOreDetector e) => e.BroadcastUsingAntennas && antennaGrids.Contains(e.CubeGrid);
 
         bool TryAddOreTask(int orei)
         {
@@ -51,17 +53,15 @@ namespace OreDetectorReforged
             SearchTask task = null;
             antennaGrids.Clear();
             foreach (var e in AntennaSet.Get.Where(CheckAntennaToLocalPlayer))
-                antennaGrids.Add(e.CubeGrid);
-            foreach (var detector in DetectorSet.Get)
+                MyAPIGateway.GridGroups.GetGroup(e.CubeGrid, GridLinkTypeEnum.Logical, antennaGrids);
+            foreach (var det in DetectorSet.Get)
             {
-                if (!detector.IsWorking || !detector.HasLocalPlayerAccess())
+                if (!(det.IsWorking && det.HasLocalPlayerAccess() && (IsBlockControlled(det) || IsBroadcasted(det))))
                     continue;
-                var settings = TerminalOreDetector.GetStorage(detector);
+                var settings = TerminalOreDetector.GetStorage(det);
                 if (settings == null || !settings.Whitelist[orei])
                     continue;
-                if (!IsBlockControlled(detector) && !IsBroadcasted(detector))
-                    continue;
-                var range = settings.range - Vector3D.Distance(center, detector.GetPosition());
+                var range = settings.range - Vector3D.Distance(center, det.GetPosition());
                 if (range <= (task?.area.Radius ?? 1.5))
                     continue;
                 task = CreateOreTask(new BoundingSphereD(center, range), orei, settings.color, settings.count);
