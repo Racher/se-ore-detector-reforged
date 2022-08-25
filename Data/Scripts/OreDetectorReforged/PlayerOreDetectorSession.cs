@@ -4,15 +4,16 @@ using VRageMath;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using OreDetectorReforged.Detector;
+using System.Linq;
 
 namespace OreDetectorReforged
 {
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     class PlayerOreDetectorSession : MySessionComponentBase
     {
-        const string gpsDesc = "Reforged";
         int counter;
         List<int>[] gpss;
+        readonly HashSet<IMyCubeGrid> antennaGrids = new HashSet<IMyCubeGrid>();
 
         public override void UpdateAfterSimulation()
         {
@@ -27,48 +28,64 @@ namespace OreDetectorReforged
                     gpss[i] = new List<int>();
             }
             if (MyAPIGateway.Gui.GetCurrentScreen != MyTerminalPageEnum.None)
-                for (var i = 0; i < gpss.Length; ++i)
-                    RemoveMarkers(i);
-            var o = counter / SyncSessionComponent.detFrequencyDivider % MaterialMappingHelper.Static.naturalOres.Length;
-            var detector = GetDetector(o);
-            if (detector == null)
+                for (var _orei = 0; _orei < gpss.Length; ++_orei)
+                    RemoveMarkers(_orei);
+            var orei = counter / SyncSessionComponent.detFrequencyDivider % MaterialMappingHelper.Static.naturalOres.Length;
+            if (!TryAddOreTask(orei))
+                RemoveMarkers(orei);
+        }
+
+        static IMyShipController ShipController => MyAPIGateway.Session.ControlledObject as IMyShipController;
+
+        static bool IsBlockControlled(IMyTerminalBlock e) => ShipController != null && MyAPIGateway.GridGroups.HasConnection(ShipController.CubeGrid, e.CubeGrid, GridLinkTypeEnum.Logical);
+
+        static bool CheckAntennaToLocalPlayer(IMyRadioAntenna e) => e.IsWorking && e.HasLocalPlayerAccess() && Vector3D.DistanceSquared(e.GetPosition(), MyAPIGateway.Session.Player.GetPosition()) < e.Radius * e.Radius;
+
+        bool IsBroadcasted(IMyOreDetector e) => e.BroadcastUsingAntennas && antennaGrids.Any(a => MyAPIGateway.GridGroups.HasConnection(a, e.CubeGrid, GridLinkTypeEnum.Logical));
+
+        bool TryAddOreTask(int orei)
+        {
+            if (Session.Player == null)
+                return false;
+            var center = Session.Camera.Position;
+            SearchTask task = null;
+            antennaGrids.Clear();
+            foreach (var e in AntennaSet.Get.Where(CheckAntennaToLocalPlayer))
+                antennaGrids.Add(e.CubeGrid);
+            foreach (var detector in DetectorSet.Get)
             {
-                RemoveMarkers(o);
-                return;
+                if (!detector.IsWorking || !detector.HasLocalPlayerAccess())
+                    continue;
+                var settings = TerminalOreDetector.GetStorage(detector);
+                if (settings == null || !settings.Whitelist[orei])
+                    continue;
+                if (!IsBlockControlled(detector) && !IsBroadcasted(detector))
+                    continue;
+                var range = settings.range - Vector3D.Distance(center, detector.GetPosition());
+                if (range <= (task?.area.Radius ?? 1.5))
+                    continue;
+                task = CreateOreTask(new BoundingSphereD(center, range), orei, settings.color, settings.count);
             }
-            var settings = TerminalOreDetector.GetStorage(detector);
-            var ore = MaterialMappingHelper.Static.naturalOres[o];
-            var area = new BoundingSphereD(detector.GetPosition(), settings.range);
-            DetectorServer.Add(new SearchTask(area, ore, settings.count, (results) =>
+            if (task != null)
+                DetectorServer.Add(task);
+            return task != null;
+        }
+
+        SearchTask CreateOreTask(BoundingSphereD area, int orei, Color color, int count)
+        {
+            var ore = MaterialMappingHelper.Static.naturalOres[orei];
+            return new SearchTask(area, ore, count, (results) =>
             {
-                RemoveMarkers(o);
+                RemoveMarkers(orei);
                 if (MyAPIGateway.Gui.GetCurrentScreen == MyTerminalPageEnum.None)
                     foreach (var result in results)
                     {
-                        var gps = Session.GPS.Create(ore, gpsDesc, result, true);
-                        gps.GPSColor = settings.color;
+                        var gps = Session.GPS.Create(ore, "Reforged", result, true);
+                        gps.GPSColor = color;
                         Session.GPS.AddLocalGps(gps);
-                        gpss[o].Add(gps.Hash);
+                        gpss[orei].Add(gps.Hash);
                     }
-            }));
-        }
-
-        IMyOreDetector GetDetector(int o)
-        {
-            var shipController = Session.ControlledObject as IMyShipController;
-            if (shipController == null)
-                return null;
-            var maxrange = 1.5f;
-            IMyOreDetector det = null;
-            foreach (var detector in shipController.CubeGrid.GetFatBlocks<IMyOreDetector>())
-            {
-                var settings = TerminalOreDetector.GetStorage(detector);
-                if (!detector.IsWorking || settings == null || !settings.Whitelist[o] || settings.range < maxrange)
-                    continue;
-                maxrange = settings.range;
-                det = detector;
-            }
-            return det;
+            });
         }
 
         void RemoveMarkers(int ore)
