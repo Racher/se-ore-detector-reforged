@@ -77,7 +77,7 @@ namespace OreDetectorReforged
             var settings = TerminalOreDetector.GetStorage(detector);
             var ore = MaterialMappingHelper.Static.naturalOres[o];
             var area = new BoundingSphereD(detector.GetPosition(), settings.range);
-            DetectorServer.Add(new SearchTask(area, MyAPIGateway.Session.Player.Character.GetPosition(), ore, settings.count, (results) =>
+            DetectorServer.Add(new SearchTask(area, ore, settings.count, (results) =>
             {
                 RemoveMarkers(o);
                 if (MyAPIGateway.Gui.GetCurrentScreen == MyTerminalPageEnum.None)
@@ -111,7 +111,7 @@ namespace OreDetectorReforged
 
             if (det == null)
             {
-                Vector3D playerPos = MyAPIGateway.Session.Player.Character.GetPosition();
+                Vector3D playerPos = Session.ControlledObject.Entity.GetPosition();
                 foreach(var grid in grids)
                 {
                     foreach (var detector in grid.GetFatBlocks<IMyOreDetector>())

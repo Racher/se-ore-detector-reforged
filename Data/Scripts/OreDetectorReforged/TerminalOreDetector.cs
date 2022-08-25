@@ -188,7 +188,7 @@ namespace OreDetectorReforged
                         e.Components.Add(comp = new LegacyOresComponent());
                     var ores = comp.ores;
                     foreach (var ore in MaterialMappingHelper.Static.naturalOres)
-                        DetectorServer.Add(new SearchTask(new BoundingSphereD(e.GetPosition(), 3e4), MyAPIGateway.Session.Player.Character.GetPosition(), ore, 1, (vs) =>
+                        DetectorServer.Add(new SearchTask(new BoundingSphereD(e.GetPosition(), 3e4), ore, 1, (vs) =>
                         {
                             if (vs.Count > 0)
                                 ores[ore] = vs[0];

@@ -20,7 +20,7 @@ namespace OreDetectorReforged
             inited = true;
             {
                 const string id = "ReforgedDetectN";
-                var p = MyAPIGateway.TerminalControls.CreateProperty<ValueTuple<BoundingSphereD, Vector3D, string, int, Action<List<Vector3D>>>, IMyProgrammableBlock>(id);
+                var p = MyAPIGateway.TerminalControls.CreateProperty<ValueTuple<BoundingSphereD, string, int, Action<List<Vector3D>>>, IMyProgrammableBlock>(id);
                 p.Setter = (e, v) => DetectorServer.Add(new SearchTask(v));
                 MyAPIGateway.TerminalControls.AddControl<IMyProgrammableBlock>(p);
             }

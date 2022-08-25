@@ -67,7 +67,7 @@ namespace OreDetectorReforged.Detector
                         if (ore != -1)
                         {
                             for (var page = 0; page < task.pages.Count; ++page)
-                                task.pages[page].Setup(pq, task.center, page, ore);
+                                task.pages[page].Setup(pq, task.area.Center, page, ore);
                             while (pq.Count > 0)
                             {
                                 var r = task.pages[pq.Top.p].Pop();

@@ -33,7 +33,7 @@ namespace OreDetectorReforged
                 new ListenerMod(6990672449530303784, (o) => detRangeLarge = Convert.ToSingle(o)),
                 new ListenerMod(5488172606588660921, (o) => detMaxCount = Convert.ToInt32(o)),
                 new ListenerMod(0738962904976040424, (o) => detFrequencyDivider = Convert.ToInt32(o)),
-                new ListenerMod(3703961318234800629, (o) => DetectorServer.Add(new SearchTask((ValueTuple<BoundingSphereD, Vector3D, string, Func<Vector3D, bool>, Action>)o))),
+                new ListenerMod(3703961318234800629, (o) => DetectorServer.Add(new SearchTask((ValueTuple<BoundingSphereD, string, Func<Vector3D, bool>, Action>)o))),
             };
         }
 
