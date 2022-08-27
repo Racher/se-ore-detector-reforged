@@ -1,3 +1,7 @@
+## [2.2.1] - 2022-08-27
+[h3] Fixed [/h3]
+- Multiplayer crash (IMyRadioAntenna.get_Radius())
+
 ## [2.2.0] - 2022-08-27
 [h3] Added [/h3]
 - Broadcast feature
