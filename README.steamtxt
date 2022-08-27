@@ -1,11 +1,9 @@
 Shows ores with gps signals
-Works automatically when controlled ship has a working ore detector
-Broadcast using antenna* (compromise)
+Works automatically when controlled ship has an ore detector or by broadcast
 Alternative algorithm independent from default ore detection
 Reasonable performance (background thread, 1% average, 100% when loading)
 VoxelHand and Meteorites are not detected
 Config through workshop [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2810156610] Sample Companion mod (2500m) [/url]
 Supports [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2810169765] Ingame scipting [/url]
-Old version [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2806113093] Archived [/url]
 
 [url=https://github.com/Racher/se-ore-detector-reforged] Source [/url]
