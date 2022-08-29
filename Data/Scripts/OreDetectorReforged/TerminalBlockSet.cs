@@ -11,9 +11,14 @@ namespace OreDetectorReforged
 {
     class TerminalBlockSet<T> : MySessionComponentBase where T : class, IMyTerminalBlock
     {
-        public static IEnumerable<T> Get => es.Where(e => !e.Closed);
+        static readonly object m_addLock = new object();
+        static readonly object m_delLock = new object();
+
+        public static IEnumerable<T> Get => UpdateAndGet();
 
         static readonly HashSet<T> es = new HashSet<T>();
+        static readonly HashSet<T> esAdd = new HashSet<T>();
+        static readonly HashSet<T> esDel = new HashSet<T>();
 
         public override void LoadData()
         {
@@ -31,28 +36,56 @@ namespace OreDetectorReforged
             MyEntities.OnEntityDelete -= OnEntityDelete;
         }
 
+        static IEnumerable<T> UpdateAndGet()
+        {
+            lock(m_addLock)
+            {
+              es.UnionWith(esAdd);
+              esAdd.Clear();
+            }
+
+            lock(m_delLock)
+            {
+              es.RemoveWhere(x => esDel.Contains(x));
+              esDel.Clear();
+            }
+            return es.Where(e => !e.Closed);
+        }
+
         static void OnEntityCreate(IMyEntity e)
         {
             if (e is T)
-                es.Add(e as T);
+                lock (m_addLock)
+                {
+                    esAdd.Add(e as T);
+                }
         }
 
         static void OnEntityAdd(IMyEntity e)
         {
             if (e is T)
-                es.Add(e as T);
+                lock (m_addLock)
+                {
+                    esAdd.Add(e as T);
+                }
         }
 
         static void OnEntityRemove(IMyEntity e)
         {
             if (e is T)
-                es.Remove(e as T);
+                lock (m_delLock)
+                {
+                    esDel.Remove(e as T);
+                }
         }
 
         static void OnEntityDelete(IMyEntity e)
         {
             if (e is T)
-                es.Remove(e as T);
+                lock (m_delLock)
+                {
+                    esDel.Remove(e as T);
+                }
         }
     }
 }
