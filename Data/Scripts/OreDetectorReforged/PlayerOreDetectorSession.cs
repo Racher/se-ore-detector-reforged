@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Sandbox.ModAPI;
 using VRageMath;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
+using VRage.Utils;
 using OreDetectorReforged.Detector;
 using System.Linq;
 
@@ -82,6 +84,7 @@ namespace OreDetectorReforged
                     {
                         var gps = Session.GPS.Create(ore, "Reforged", result, true);
                         gps.GPSColor = color;
+                        CalculateAngle(gps);
                         Session.GPS.AddLocalGps(gps);
                         gpss[orei].Add(gps.Hash);
                     }
@@ -93,6 +96,21 @@ namespace OreDetectorReforged
             foreach(var gps in gpss[ore])
                 Session.GPS?.RemoveLocalGps(gps);
             gpss[ore].Clear();
+        }
+
+        protected void CalculateAngle(IMyGps gps)
+        {
+            Vector3D playerPos = Session.ControlledObject.Entity.GetPosition();
+            float naturalGravityInterference = 0;
+            Vector3D gravity = MyAPIGateway.Physics.CalculateNaturalGravityAt(playerPos, out naturalGravityInterference);
+            if (gravity != Vector3D.Zero)
+            {
+                gravity.Normalize();
+                Vector3D lookAt = gps.Coords - playerPos;
+                lookAt.Normalize();
+                float num = MathHelper.ToDegrees(MyUtils.GetAngleBetweenVectors(lookAt, gravity)) - 90f;
+                gps.ContainerRemainingTime = $"{num:F2}°";
+            }
         }
     }
 }
