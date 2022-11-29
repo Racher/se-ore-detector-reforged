@@ -82,13 +82,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AntennaSet.cs" />
-    <Compile Include="DetectorSet.cs" />
     <Compile Include="Detector\MaterialMappingHelper.cs" />
     <Compile Include="Detector\Test\PlanetCubemapHelperTest.cs" />
     <Compile Include="Detector\Test\PlanetMatHelperTest.cs" />
     <Compile Include="ListenerWrappers.cs" />
-    <Compile Include="TerminalBlockSet.cs" />
     <Compile Include="TerminalOreDetector.cs" />
     <Compile Include="TerminalProgrammableBlock.cs" />
     <Compile Include="SyncSessionComponent.cs" />

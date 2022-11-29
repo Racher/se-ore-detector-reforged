@@ -13,7 +13,6 @@ namespace OreDetectorReforged
     {
         int counter;
         List<int>[] gpss;
-        readonly HashSet<IMyCubeGrid> antennaGrids = new HashSet<IMyCubeGrid>();
 
         public override void UpdateAfterSimulation()
         {
@@ -35,36 +34,35 @@ namespace OreDetectorReforged
                 RemoveMarkers(orei);
         }
 
-        static IMyShipController ShipController => MyAPIGateway.Session.ControlledObject as IMyShipController;
-
-        static bool IsBlockControlled(IMyTerminalBlock e) => ShipController != null && MyAPIGateway.GridGroups.HasConnection(ShipController.CubeGrid, e.CubeGrid, GridLinkTypeEnum.Logical);
-
-        static bool IsAntennaInRange(IMyRadioAntenna e) => Vector3D.DistanceSquared(e.GetPosition(), MyAPIGateway.Session.Player.GetPosition()) < e.Radius * e.Radius;
-
-        static bool CheckAntennaToLocalPlayer(IMyRadioAntenna e) => e.IsWorking && e.HasLocalPlayerAccess() && IsAntennaInRange(e);
-
-        bool IsBroadcasted(IMyOreDetector e) => e.BroadcastUsingAntennas && antennaGrids.Contains(e.CubeGrid);
-
         bool TryAddOreTask(int orei)
         {
-            if (Session.Player == null)
+            if (Session.Player == null || MyAPIGateway.Session.ControlledObject == null)
                 return false;
+            var controlledGridGroup = (MyAPIGateway.Session.ControlledObject as IMyShipController)?.CubeGrid?.GetGridGroup(GridLinkTypeEnum.Electrical);
+            var grids = new List<IMyCubeGrid>();
             var center = Session.Camera.Position;
+            var broadcastpos = MyAPIGateway.Session.ControlledObject.Entity.GetPosition();
             SearchTask task = null;
-            antennaGrids.Clear();
-            foreach (var e in AntennaSet.Get.Where(CheckAntennaToLocalPlayer))
-                MyAPIGateway.GridGroups.GetGroup(e.CubeGrid, GridLinkTypeEnum.Logical, antennaGrids);
-            foreach (var det in DetectorSet.Get)
+            foreach (var gridgroup in MyAPIGateway.GridGroups.GetGridGroups(GridLinkTypeEnum.Electrical, new List<IMyGridGroupData>()))
             {
-                if (!(det.IsWorking && det.HasLocalPlayerAccess() && (IsBlockControlled(det) || IsBroadcasted(det))))
+                grids.Clear();
+                gridgroup.GetGrids(grids);
+                var controlled = controlledGridGroup == gridgroup;
+                if (!controlled && !grids.Any(grid => grid.GetFatBlocks<IMyRadioAntenna>().Any(e =>
+                    e.IsWorking && e.EnableBroadcasting && e.HasLocalPlayerAccess() && Vector3D.DistanceSquared(e.GetPosition(), broadcastpos) <= e.Radius * e.Radius)))
                     continue;
-                var settings = TerminalOreDetector.GetStorage(det);
-                if (settings == null || !settings.Whitelist[orei])
-                    continue;
-                var range = settings.range - Vector3D.Distance(center, det.GetPosition());
-                if (range <= (task?.area.Radius ?? 1.5))
-                    continue;
-                task = CreateOreTask(new BoundingSphereD(center, range), orei, settings.color, settings.count);
+                foreach (var grid in grids)
+                    foreach (var e in grid.GetFatBlocks<IMyOreDetector>())
+                    {
+                        if (!e.IsWorking || !e.HasLocalPlayerAccess() || !controlled && !e.BroadcastUsingAntennas)
+                            continue;
+                        var settings = TerminalOreDetector.GetStorage(e);
+                        if (settings == null || !settings.Whitelist[orei])
+                            continue;
+                        var range = settings.range - Vector3D.Distance(center, e.GetPosition());
+                        if (range > (task?.area.Radius ?? 1.5))
+                            task = CreateOreTask(new BoundingSphereD(center, range), orei, settings.color, settings.count);
+                    }
             }
             if (task != null)
                 DetectorServer.Add(task);
