@@ -1,3 +1,8 @@
+## [2.3.0] - 2022-12-04
+[h3] Added [/h3]
+- Config file (%appdata%\SpaceEngineers\Storage\OreDetectorReforgedConfig.xml)
+- Optional gps angle info
+
 ## [2.2.1] - 2022-08-27
 [h3] Fixed [/h3]
 - Multiplayer crash (IMyRadioAntenna.get_Radius())

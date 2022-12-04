@@ -1,11 +1,8 @@
-﻿using ProtoBuf;
-using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using OreDetectorReforged.Detector;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
-using VRage.Game;
 using VRage.Game.Components;
 using VRage.ModAPI;
 using VRage.Utils;
@@ -15,92 +12,11 @@ namespace OreDetectorReforged
 {
     static class TerminalOreDetector
     {
-        [ProtoContract]
-        public class OreDetectorStorage
-        {
-            [ProtoMember(1)]
-            public float range = 30000;
-
-            [ProtoMember(2)]
-            int period;
-
-            [ProtoMember(3)]
-            public Color color = new Color(255, 220, 140);
-
-            [ProtoMember(4)]
-            public int count = 1;
-
-            [ProtoMember(5)]
-            int whitelist0;
-
-            [ProtoMember(6)]
-            int whitelist1;
-
-            [ProtoMember(7)]
-            int whitelist2;
-
-            [ProtoMember(8)]
-            int whitelist3;
-
-            readonly int[] buf = new int[4];
-
-            public OreDetectorStorage()
-            {
-                Whitelist = new BitArray(128, true);
-            }
-
-            public BitArray Whitelist
-            {
-                get
-                {
-                    buf[0] = whitelist0;
-                    buf[1] = whitelist1;
-                    buf[2] = whitelist2;
-                    buf[3] = whitelist3;
-                    return new BitArray(buf);
-                }
-                set
-                {
-                    value.CopyTo(buf, 0);
-                    whitelist0 = buf[0];
-                    whitelist1 = buf[1];
-                    whitelist2 = buf[2];
-                    whitelist3 = buf[3];
-                }
-            }
-
-            public OreDetectorStorage(OreDetectorStorage other)
-            {
-                range = other.range;
-                color = other.color;
-                count = other.count;
-                whitelist0 = other.whitelist0;
-                whitelist1 = other.whitelist1;
-                whitelist2 = other.whitelist2;
-                whitelist3 = other.whitelist3;
-            }
-        }
-
         static bool inited;
-        static float GetMaxRange(IMyTerminalBlock e) => e.CubeGrid.GridSizeEnum == MyCubeSize.Small ? SyncSessionComponent.detRangeSmall : SyncSessionComponent.detRangeLarge;
 
-        public static OreDetectorStorage GetStorage(IMyTerminalBlock entity)
+        public static void InitTerminalControls(IMyEntity entity)
         {
-            var r = SyncSessionComponent.GetLocal<OreDetectorStorage>(entity);
-            if (r != null)
-            {
-                r.range = Math.Min(r.range, GetMaxRange(entity));
-                r.count = Math.Min(r.count, SyncSessionComponent.detMaxCount);
-            }
-            return r;
-        }
-
-        public static void TryInit(IMyEntity entity)
-        {
-            if (entity as IMyOreDetector == null)
-                return;
-            SyncSessionComponent.DownloadStorage<OreDetectorStorage>(entity);
-            if (inited)
+            if (inited || !(entity is IMyOreDetector))
                 return;
             inited = true;
             {
@@ -112,9 +28,9 @@ namespace OreDetectorReforged
                 const string id = "Reforged: GPSColor";
                 var p = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlColor, IMyOreDetector>(id);
                 p.Title = MyStringId.GetOrCompute(id);
-                p.Visible = (e) => GetStorage(e) != null;
-                p.Getter = (e) => GetStorage(e).color;
-                p.Setter = (e, v) => SyncSessionComponent.SetAndSendMessageToOthers(e, new OreDetectorStorage(GetStorage(e)) { color = v });
+                p.Visible = (e) => OreDetectorData.Parse(e) != null;
+                p.Getter = (e) => OreDetectorData.Parse(e).Color;
+                p.Setter = (e, v) => OreDetectorData.Parse(e).Color = v;
                 p.Tooltip = MyStringId.GetOrCompute("The same color for all mod generated ore gps");
                 MyAPIGateway.TerminalControls.AddControl<IMyOreDetector>(p);
             }
@@ -122,30 +38,22 @@ namespace OreDetectorReforged
                 const string id = "Reforged: Range";
                 var p = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyOreDetector>(id);
                 p.Title = MyStringId.GetOrCompute(id);
-                p.Visible = (e) => GetStorage(e) != null;
-                p.Getter = (e) => GetStorage(e).range;
-                p.Setter = (e, v) => SyncSessionComponent.SetAndSendMessageToOthers(e, new OreDetectorStorage(GetStorage(e)) { range = v });
-                p.SetLogLimits((e) => 1f, GetMaxRange);
-                p.Writer = (e, sb) =>
-                {
-                    sb.Append(GetStorage(e).range);
-                    sb.Append(" m");
-                };
+                p.Visible = (e) => OreDetectorData.Parse(e) != null;
+                p.Getter = (e) => OreDetectorData.Parse(e).Range;
+                p.Setter = (e, v) => OreDetectorData.Parse(e).Range = v;
+                p.SetLogLimits((e) => 1f, (e) => OreDetectorData.Parse(e).rangeLimit);
+                p.Writer = (e, sb) => sb.AppendFormat("{0} m", OreDetectorData.Parse(e).Range);
                 MyAPIGateway.TerminalControls.AddControl<IMyOreDetector>(p);
             }
             {
                 const string id = "Reforged: Count";
                 var p = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyOreDetector>(id);
                 p.Title = MyStringId.GetOrCompute(id);
-                p.Visible = (e) => GetStorage(e) != null;
-                p.Getter = (e) => GetStorage(e).count;
-                p.Setter = (e, v) => SyncSessionComponent.SetAndSendMessageToOthers(e, new OreDetectorStorage(GetStorage(e)) { count = (int)v });
-                p.SetLogLimits(1, SyncSessionComponent.detMaxCount);
-                p.Writer = (e, sb) =>
-                {
-                    sb.Append(GetStorage(e).count);
-                    sb.Append(" each");
-                };
+                p.Visible = (e) => OreDetectorData.Parse(e) != null;
+                p.Getter = (e) => OreDetectorData.Parse(e).Count;
+                p.Setter = (e, v) => OreDetectorData.Parse(e).Count = (int)v;
+                p.SetLogLimits((e) => 1f, (e) => Config.Static.gpsCountPerOreLimit);
+                p.Writer = (e, sb) => sb.AppendFormat("{0} each", OreDetectorData.Parse(e).Count);
                 p.Tooltip = MyStringId.GetOrCompute("Show nearest N of each mined ore");
                 MyAPIGateway.TerminalControls.AddControl<IMyOreDetector>(p);
             }
@@ -153,12 +61,12 @@ namespace OreDetectorReforged
                 const string id = "Reforged: Whitelist";
                 var p = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlListbox, IMyOreDetector>(id);
                 p.Title = MyStringId.GetOrCompute(id);
-                p.Visible = (e) => GetStorage(e) != null;
+                p.Visible = (e) => OreDetectorData.Parse(e) != null;
                 p.VisibleRowsCount = 10;
                 p.Multiselect = true;
                 p.ListContent = (e, ls, ss) =>
                 {
-                    var whitelist = GetStorage(e).Whitelist;
+                    var whitelist = OreDetectorData.Parse(e).Whitelist;
                     for (var o = 0; o < MaterialMappingHelper.Static.naturalOres.Length; ++o)
                     {
                         var l = new MyTerminalControlListBoxItem(MyStringId.GetOrCompute(MaterialMappingHelper.Static.naturalOres[o]), new MyStringId(), o);
@@ -169,12 +77,10 @@ namespace OreDetectorReforged
                 };
                 p.ItemSelected = (e, ss) =>
                 {
-                    var v = GetStorage(e);
                     var whitelist = new BitArray(128);
                     foreach (var l in ss)
                         whitelist[(int)l.UserData] = true;
-                    v.Whitelist = whitelist;
-                    SyncSessionComponent.SetAndSendMessageToOthers(e, v);
+                    OreDetectorData.Parse(e).Whitelist = whitelist;
                 };
                 MyAPIGateway.TerminalControls.AddControl<IMyOreDetector>(p);
             }

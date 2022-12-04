@@ -82,13 +82,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config.cs" />
     <Compile Include="Detector\MaterialMappingHelper.cs" />
     <Compile Include="Detector\Test\PlanetCubemapHelperTest.cs" />
     <Compile Include="Detector\Test\PlanetMatHelperTest.cs" />
-    <Compile Include="ListenerWrappers.cs" />
+    <Compile Include="OreDetectorData.cs" />
+    <Compile Include="Main.cs" />
     <Compile Include="TerminalOreDetector.cs" />
     <Compile Include="TerminalProgrammableBlock.cs" />
-    <Compile Include="SyncSessionComponent.cs" />
+    <Compile Include="SyncModStorage.cs" />
     <Compile Include="Detector\LinearCompressor.cs" />
     <Compile Include="Detector\DetectorPagePlanet.cs" />
     <Compile Include="Detector\Node.cs" />
@@ -98,11 +100,11 @@
     <Compile Include="Detector\DetectorPageNotPlanet.cs" />
     <Compile Include="Detector\IDetectorPage.cs" />
     <Compile Include="Microsoft\PriorityQueue.cs" />
-    <Compile Include="PermaCache.cs" />
+    <Compile Include="Detector\PermaCache.cs" />
     <Compile Include="Detector\VoxelMapComponent.cs" />
     <Compile Include="Detector\PlanetCubemapHelper.cs" />
     <Compile Include="Detector\PlanetMatHelper.cs" />
-    <Compile Include="PlayerOreDetectorSession.cs" />
+    <Compile Include="PlayerOreGps.cs" />
     <Compile Include="BigGustavePng\Adam7.cs" />
     <Compile Include="BigGustavePng\Adler32Checksum.cs" />
     <Compile Include="BigGustavePng\ChunkHeader.cs" />

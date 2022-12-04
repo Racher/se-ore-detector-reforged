@@ -5,20 +5,22 @@ using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using OreDetectorReforged.Detector;
 using System.Linq;
+using VRage.Utils;
 
 namespace OreDetectorReforged
 {
-    [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
-    class PlayerOreDetectorSession : MySessionComponentBase
+    static class PlayerOreGps
     {
-        int counter;
-        List<int>[] gpss;
+        static int counter;
+        static List<int>[] gpss;
 
-        public override void UpdateAfterSimulation()
+        public static void UpdateGpss()
         {
-            var period = MaterialMappingHelper.Static.naturalOres.Length * SyncSessionComponent.detFrequencyDivider;
+            if (MyAPIGateway.Session.Player == null || MyAPIGateway.Session.ControlledObject == null || Config.Static == null)
+                return;
+            var period = MaterialMappingHelper.Static.naturalOres.Length * Config.Static.detectEveryNthUpdate;
             counter = (counter + 1) % period;
-            if (counter % SyncSessionComponent.detFrequencyDivider != 0)
+            if (counter % Config.Static.detectEveryNthUpdate != 0)
                 return;
             if (gpss == null)
             {
@@ -29,18 +31,16 @@ namespace OreDetectorReforged
             if (MyAPIGateway.Gui.GetCurrentScreen != MyTerminalPageEnum.None)
                 for (var _orei = 0; _orei < gpss.Length; ++_orei)
                     RemoveMarkers(_orei);
-            var orei = counter / SyncSessionComponent.detFrequencyDivider % MaterialMappingHelper.Static.naturalOres.Length;
+            var orei = counter / Config.Static.detectEveryNthUpdate % MaterialMappingHelper.Static.naturalOres.Length;
             if (!TryAddOreTask(orei))
                 RemoveMarkers(orei);
         }
 
-        bool TryAddOreTask(int orei)
+        static bool TryAddOreTask(int orei)
         {
-            if (Session.Player == null || MyAPIGateway.Session.ControlledObject == null)
-                return false;
             var controlledGridGroup = (MyAPIGateway.Session.ControlledObject as IMyShipController)?.CubeGrid?.GetGridGroup(GridLinkTypeEnum.Electrical);
             var grids = new List<IMyCubeGrid>();
-            var center = Session.Camera.Position;
+            var center = MyAPIGateway.Session.Camera.Position;
             var broadcastpos = MyAPIGateway.Session.ControlledObject.Entity.GetPosition();
             SearchTask task = null;
             foreach (var gridgroup in MyAPIGateway.GridGroups.GetGridGroups(GridLinkTypeEnum.Electrical, new List<IMyGridGroupData>()))
@@ -56,12 +56,12 @@ namespace OreDetectorReforged
                     {
                         if (!e.IsWorking || !e.HasLocalPlayerAccess() || !controlled && !e.BroadcastUsingAntennas)
                             continue;
-                        var settings = TerminalOreDetector.GetStorage(e);
+                        var settings = OreDetectorData.Parse(e);
                         if (settings == null || !settings.Whitelist[orei])
                             continue;
-                        var range = settings.range - Vector3D.Distance(center, e.GetPosition());
+                        var range = settings.Range - Vector3D.Distance(center, e.GetPosition());
                         if (range > (task?.area.Radius ?? 1.5))
-                            task = CreateOreTask(new BoundingSphereD(center, range), orei, settings.color, settings.count);
+                            task = CreateOreTask(new BoundingSphereD(center, range), orei, settings.Color, settings.Count);
                     }
             }
             if (task != null)
@@ -69,7 +69,7 @@ namespace OreDetectorReforged
             return task != null;
         }
 
-        SearchTask CreateOreTask(BoundingSphereD area, int orei, Color color, int count)
+        static SearchTask CreateOreTask(BoundingSphereD area, int orei, Color color, int count)
         {
             var ore = MaterialMappingHelper.Static.naturalOres[orei];
             return new SearchTask(area, ore, count, (results) =>
@@ -78,18 +78,28 @@ namespace OreDetectorReforged
                 if (MyAPIGateway.Gui.GetCurrentScreen == MyTerminalPageEnum.None)
                     foreach (var result in results)
                     {
-                        var gps = Session.GPS.Create(ore, "Reforged", result, true);
+                        var gps = MyAPIGateway.Session.GPS.Create(ore, "Reforged", result, true);
                         gps.GPSColor = color;
-                        Session.GPS.AddLocalGps(gps);
+                        if (Config.Static.gpsAngleInfo)
+                            AddGpsAngleInfo(gps);
+                        MyAPIGateway.Session.GPS.AddLocalGps(gps);
                         gpss[orei].Add(gps.Hash);
                     }
             });
         }
 
-        void RemoveMarkers(int ore)
+        static void AddGpsAngleInfo(IMyGps gps)
+        {
+            var p = MyAPIGateway.Session.Camera.Position;
+            float naturalGravityInterference;
+            Vector3D g = MyAPIGateway.Physics.CalculateNaturalGravityAt(p, out naturalGravityInterference);
+            gps.ContainerRemainingTime = g.IsZero() ? null : $"{MathHelper.ToDegrees(MyUtils.GetAngleBetweenVectorsAndNormalise(gps.Coords - p, g)) - 90f:F2}°";
+        }
+
+        static void RemoveMarkers(int ore)
         {
             foreach(var gps in gpss[ore])
-                Session.GPS?.RemoveLocalGps(gps);
+                MyAPIGateway.Session.GPS?.RemoveLocalGps(gps);
             gpss[ore].Clear();
         }
     }

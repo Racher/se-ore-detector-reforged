@@ -11,11 +11,9 @@ namespace OreDetectorReforged
     {
         static bool inited;
 
-        public static void TryInit(IMyEntity entity)
+        public static void InitTerminalControls(IMyEntity entity)
         {
-            if (entity as IMyProgrammableBlock == null)
-                return;
-            if (inited)
+            if (inited || !(entity is IMyProgrammableBlock))
                 return;
             inited = true;
             {
