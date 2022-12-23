@@ -3,7 +3,7 @@ Works automatically when controlled ship has an ore detector or by broadcast
 Alternative algorithm independent from default ore detection
 Reasonable performance (background thread, 1% average, 100% when loading)
 VoxelHand and Meteorites are not detected
-Config through workshop [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2810156610] Sample Companion mod (2500m) [/url]
+Config file at %appdata%\SpaceEngineers\Storage\OreDetectorReforgedConfig.xml (or in dedicated server or world folder)
 Supports [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2810169765] Ingame scipting [/url]
 
 [url=https://github.com/Racher/se-ore-detector-reforged] Source [/url]

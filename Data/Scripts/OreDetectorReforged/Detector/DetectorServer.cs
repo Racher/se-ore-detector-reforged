@@ -35,6 +35,8 @@ namespace OreDetectorReforged.Detector
             tasks.Add(task);
         }
 
+        public static void AddRaw(object o) => Add(new SearchTask((ValueTuple<BoundingSphereD, string, Func<Vector3D, bool>, Action>)o));
+
         public override void LoadData()
         {
             MyAPIGateway.Parallel.StartBackground(ProcessTasks);

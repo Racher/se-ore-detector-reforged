@@ -1,3 +1,7 @@
+## [2.3.1] - 2022-12-23
+[h3] Fixed [/h3]
+- Mod msg handler
+
 ## [2.3.0] - 2022-12-04
 [h3] Added [/h3]
 - Config file (%appdata%\SpaceEngineers\Storage\OreDetectorReforgedConfig.xml)
