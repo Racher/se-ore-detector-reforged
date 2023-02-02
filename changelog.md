@@ -1,3 +1,7 @@
+## [2.3.2] - 2023-02-02
+[h3] Fixed [/h3]
+- Block terminal setting save/load
+
 ## [2.3.1] - 2022-12-23
 [h3] Fixed [/h3]
 - Mod msg handler

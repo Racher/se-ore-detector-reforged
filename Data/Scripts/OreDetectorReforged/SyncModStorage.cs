@@ -34,7 +34,11 @@ namespace OreDetectorReforged
             if (!MyAPIGateway.Multiplayer.IsServer)
                 MyAPIGateway.Multiplayer.SendMessageToServer(Main.storageMsgId, BitConverter.GetBytes(entity.EntityId));
             else
-                MyAPIGateway.Parallel.Start(() => { }, () => SetLocalBytes(entity, new byte[1]));
+                MyAPIGateway.Parallel.Start(() => { }, () =>
+                {
+                    if (GetBytes(entity) == null)
+                        SetLocalBytes(entity, new byte[1]);
+                });
         }
 
         static void SetLocalBytes(IMyEntity entity, byte[] v)
