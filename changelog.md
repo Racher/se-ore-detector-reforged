@@ -1,3 +1,8 @@
+## [2.3.3] - 2023-07-06
+[h3] Fixed [/h3]
+- Boulder fix: Scan for foreign ores (Star Trek Modpack)
+- Boulder fix: Don't scan lod1/disappearing boulders
+
 ## [2.3.2] - 2023-02-02
 [h3] Fixed [/h3]
 - Block terminal setting save/load

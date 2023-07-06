@@ -1,10 +1,9 @@
-﻿using VRageMath;
+﻿using Sandbox.Definitions;
 using Sandbox.Game.Entities;
-using System.Collections;
 using System;
-using Sandbox.ModAPI;
-using Sandbox.Definitions;
+using System.Collections;
 using VRage.Voxels;
+using VRageMath;
 
 namespace OreDetectorReforged.Detector
 {
@@ -26,14 +25,11 @@ namespace OreDetectorReforged.Detector
         public DetectorPageNotPlanet(MyVoxelBase vb)
         {
             storageData.Resize(Vector3I.One * 4);
-            var whitelist = vb.BoulderInfo != null
-                ? MaterialMappingHelper.Static.planetWhitelists[(MyAPIGateway.Entities.GetEntityById(vb.BoulderInfo.Value.PlanetId) as MyPlanet).Generator]
-                : MaterialMappingHelper.Static.asteroidWhitelist;
             pyramids = new BitArray[MaterialMappingHelper.Static.naturalOres.Length];
             foreach (var mat in MyDefinitionManager.Static.GetVoxelMaterialDefinitions())
             {
                 var ore = MaterialMappingHelper.Static.matIdxToOreIdx[mat.Index];
-                if (ore == 255 || !whitelist[ore])
+                if (ore == 255)
                     continue;
                 orePalette[mat.Index] = (byte)(ore + 1);
                 if (pyramids[ore] == null)
@@ -178,8 +174,6 @@ namespace OreDetectorReforged.Detector
             z = i >> 2 * w & mask;
             y = i >> 1 * w & mask;
             x = i >> 0 * w & mask;
-            if (IndexToPyarmidLinear(x, y, z, w) != j)
-                throw new Exception();
         }
     }
 }
