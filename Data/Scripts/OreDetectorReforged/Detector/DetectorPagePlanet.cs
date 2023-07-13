@@ -87,7 +87,10 @@ namespace OreDetectorReforged.Detector
             foreach (var oreChannel in planet.Generator.OreMappings)
             {
                 var depth = oreChannel.Start + oreChannel.Depth - Math.Min(2, oreChannel.Depth / 2);
-                var m = MyDefinitionManager.Static.GetVoxelMaterialDefinition(oreChannel.Type).Index;
+                var matDef = MyDefinitionManager.Static.GetVoxelMaterialDefinition(oreChannel.Type);
+                if (matDef == null)
+                    continue;
+                var m = matDef.Index;
                 if (MaterialMappingHelper.Static.matIdxToOreIdx[m] == 255)
                     continue;
                 var gray = palette.Get(m, depth);
