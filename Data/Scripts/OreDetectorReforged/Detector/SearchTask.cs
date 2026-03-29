@@ -20,7 +20,7 @@ namespace OreDetectorReforged.Detector
             this.finishCb = finishCb;
         }
 
-        public SearchTask(BoundingSphereD area, string minedOre, int count, Action<List<Vector3D>> finishCb)
+        public SearchTask(BoundingSphereD area, string minedOre, int count, Action<IList<Vector3D>> finishCb)
         {
             var results = new List<Vector3D>(count);
             this.area = area;
@@ -34,10 +34,6 @@ namespace OreDetectorReforged.Detector
         }
 
         public SearchTask(ValueTuple<BoundingSphereD, string, Func<Vector3D, bool>, Action> t) : this(t.Item1, t.Item2, t.Item3, t.Item4)
-        {
-        }
-
-        public SearchTask(ValueTuple<BoundingSphereD, string, int, Action<List<Vector3D>>> t) : this(t.Item1, t.Item2, t.Item3, t.Item4)
         {
         }
     }

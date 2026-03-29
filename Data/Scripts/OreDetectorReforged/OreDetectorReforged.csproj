@@ -89,6 +89,7 @@
     <Compile Include="Detector\Test\PlanetMatHelperTest.cs" />
     <Compile Include="OreDetectorData.cs" />
     <Compile Include="Main.cs" />
+    <Compile Include="ScriptSample.cs" />
     <Compile Include="TerminalOreDetector.cs" />
     <Compile Include="TerminalProgrammableBlock.cs" />
     <Compile Include="SyncModStorage.cs" />

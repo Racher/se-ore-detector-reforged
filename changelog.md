@@ -1,3 +1,8 @@
+## [2.3.4] - 2026-03-29
+[h3] Fixed [/h3]
+- Fix: In-game scripting "Property ReforgedDetectN is not of type ValueTuple"
+- Fix: `break;` in asteroid scanning
+
 ## [2.3.3] - 2023-07-06
 [h3] Fixed [/h3]
 - Boulder fix: Scan for foreign ores (Star Trek Modpack)

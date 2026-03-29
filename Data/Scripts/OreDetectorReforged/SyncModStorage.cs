@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using OreDetectorReforged.Detector;
-using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
-using VRage.Game;
-using VRage.Game.Components;
 using VRage.ModAPI;
-using VRage.Utils;
-using VRageMath;
 
 namespace OreDetectorReforged
 {

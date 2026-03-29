@@ -63,11 +63,10 @@ namespace OreDetectorReforged.Detector
             var itmax = (vb.Size - 1) / 16;
             var resolution = Math.Max(2, itmax.AbsMax() + 1);
             topw = 6;
-            while (1 << topw - 1 >= resolution)
+            while (1 << (topw - 1) >= resolution)
                 --topw;
             foreach (var pyramid in pyramids)
-                if (pyramid != null)
-                    pyramid.SetAll(false);
+                pyramid?.SetAll(false);
             var count = 0;
             for (var vit = new Vector3I_RangeIterator(ref Vector3I.Zero, ref itmax); vit.IsValid(); vit.MoveNext())
             {
@@ -86,7 +85,6 @@ namespace OreDetectorReforged.Detector
                     for (var z = topw; z >= 0; --z, c >>= 1)
                         pyramid[IndexToPyarmidLinear(c.X, c.Y, c.Z, z)] = true;
                     ++count;
-                    break;
                 }
             }
         }
