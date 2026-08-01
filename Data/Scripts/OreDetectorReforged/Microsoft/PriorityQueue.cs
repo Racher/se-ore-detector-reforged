@@ -28,7 +28,7 @@ namespace OreDetectorReforged
     /// Push and Pop are each O(log N). Pushing N objects and them popping
     /// them all is equivalent to performing a heap sort and is O(N log N).
     /// </remarks>
-    class PriorityQueue<T>
+    class PriorityQueue<T, TComparer> where TComparer : struct, IComparer<T>
     {
         internal void Clear()
         {
@@ -76,7 +76,7 @@ namespace OreDetectorReforged
 
         #region constructors
 
-        internal PriorityQueue(int capacity, IComparer<T> comparer)
+        internal PriorityQueue(int capacity, TComparer comparer)
         {
             _heap = new T[capacity > 0 ? capacity : DefaultCapacity];
             _count = 0;
@@ -289,7 +289,7 @@ namespace OreDetectorReforged
 
         private T[] _heap;
         private int _count;
-        private IComparer<T> _comparer;
+        private TComparer _comparer;
         private bool _isHeap;
         private const int DefaultCapacity = 6;
 

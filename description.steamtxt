@@ -1,0 +1,27 @@
+Modding and Scripting API for a custom long range, low cpu usage ore detection algorithm.
+See [url=https://steamcommunity.com/sharedfiles/filedetails/?id=TBD] Ore Detector Reforged GPS [/url] for the player focused mod.
+
+[h2] Planets [/h2]
+[list]
+[*]_mat.png is used to find the ore locations - voxels are only checked strategically (7-15m resolution)
+[*]First scan time: ~1s per planet face
+[*]Biome related layers (lakes, oasis, ice caps) are not supported
+[*]Horizontally nearest ores are searched (Not necessarily nearest in 3D)
+[/list]
+
+[h2] Asteroids [/h2]
+Initial full scan at a low accuracy (16m) resolution: small or partial veins can be missed 
+
+[h2] Scripting [/h2]
+[code]
+public void Main(string argument, UpdateType updateSource)
+{
+	var area = new BoundingSphereD(Me.GetPosition(), 15000);
+	Action<Vector3D, Exception> callBack = (v, e) => Me.CustomData = e?.ToString() ?? v.ToString();
+	Me.SetValue("DetectOre", new MyTuple<BoundingSphereD, string, Action<Vector3D, Exception>>(area, "Nickel", callBack));
+}
+[/code]
+
+[url=https://github.com/Racher/se-ore-detector-reforged] Source [/url]
+[url=https://github.com/Racher/se-ore-detector-reforged-gps] Front-end child mod [/url]
+[url=https://steamcommunity.com/sharedfiles/filedetails/?id=2790047923] Discontinued previous mod [/url]

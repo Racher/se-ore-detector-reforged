@@ -1,98 +1,85 @@
-﻿using Sandbox.Definitions;
-using System;
-using VRage.Game.Components;
-using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Sandbox.Definitions;
+using VRage.Game.Components;
+
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable UnusedType.Global
 
 namespace OreDetectorReforged.Detector
 {
-    class MaterialMappingHelper
+    [MySessionComponentDescriptor(MyUpdateOrder.BeforeSimulation)]
+    class MaterialMappingHelper : MySessionComponentBase
     {
-        public static MaterialMappingHelper Static
-        {
-            get
-            {
-                if (loaded == null)
-                    loaded = new MaterialMappingHelper();
-                return loaded;
-            }
-        }
-        static MaterialMappingHelper loaded;
+        static bool _loaded;
 
-        public string[] naturalOres;
-        public byte[] matIdxToOreIdx;
-        public Dictionary<MyPlanetGeneratorDefinition, BitArray> planetWhitelists;
-        public BitArray asteroidWhitelist;
+        public static string[] NaturalOres;
+        public static Dictionary<string, int> NaturalOresToIdx;
+        public static byte[] MatIdxToOreIdx;
+        public static BitArray AsteroidWhitelist;
+        public static int NaturalOreCount => NaturalOres.Length;
 
-        MaterialMappingHelper()
+        public override void UpdateBeforeSimulation()
         {
+            if (_loaded) return;
             LoadNaturalOres();
             LoadMatIdx();
-            LoadPlanetWhitelist();
             LoadAsteroidWhitelist();
+            _loaded = true;
         }
 
-        void LoadNaturalOres()
+        protected override void UnloadData()
+        {
+            _loaded = false;
+            NaturalOres = null;
+            NaturalOresToIdx = null;
+            MatIdxToOreIdx = null;
+            AsteroidWhitelist = null;
+        }
+
+        static void LoadNaturalOres()
         {
             var ores = new HashSet<string>();
             foreach (var planet in MyDefinitionManager.Static.GetPlanetsGeneratorsDefinitions())
-            {
                 foreach (var oreChannel in planet.OreMappings)
-                    ores.Add(oreChannel.Type);
-                foreach (var biome in planet.MaterialGroups)
-                    foreach (var rule in biome.MaterialRules)
-                        foreach (var layer in rule.Layers)
-                            ores.Add(layer.Material);
-            }
-            ores = new HashSet<string>(ores.Select(s => MyDefinitionManager.Static.GetVoxelMaterialDefinition(s)?.MinedOre));
+                {
+                    var ore = MyDefinitionManager.Static.GetVoxelMaterialDefinition(oreChannel.Type)?.MinedOre;
+                    if (ore != null)
+                        ores.Add(ore);
+                }
+
             foreach (var mat in MyDefinitionManager.Static.GetVoxelMaterialDefinitions())
                 if (mat.SpawnsInAsteroids)
                     ores.Add(mat.MinedOre);
             ores.Remove("Stone");
-            MyDefinitionManager.Static.GetOreTypeNames(out naturalOres);
-            naturalOres = naturalOres.Where(s => ores.Contains(s)).Take(128).ToArray();
+            string[] oreNames;
+            MyDefinitionManager.Static.GetOreTypeNames(out oreNames);
+            NaturalOres = oreNames.Where(ores.Contains).Take(254).ToArray();
+            NaturalOresToIdx = new Dictionary<string, int>(NaturalOres.Length);
+            for (var i = 0; i < NaturalOres.Length; i++)
+                NaturalOresToIdx[NaturalOres[i]] = i;
         }
 
-        void LoadMatIdx()
+        static void LoadMatIdx()
         {
-            matIdxToOreIdx = new byte[256];
-            for (var i = 0; i < matIdxToOreIdx.Length; ++i)
-                matIdxToOreIdx[i] = 255;
+            MatIdxToOreIdx = new byte[256];
+            for (var i = 0; i < MatIdxToOreIdx.Length; ++i)
+                MatIdxToOreIdx[i] = 255;
             foreach (var def in MyDefinitionManager.Static.GetVoxelMaterialDefinitions())
-                matIdxToOreIdx[def.Index] = (byte)Array.IndexOf(naturalOres, def.MinedOre);
-        }
-
-        void LoadPlanetWhitelist()
-        {
-            planetWhitelists = new Dictionary<MyPlanetGeneratorDefinition, BitArray>();
-            foreach (var planet in MyDefinitionManager.Static.GetPlanetsGeneratorsDefinitions())
             {
-                var whitelist = new BitArray(128);
-                Action<string> Add = (material) =>
-                {
-                    var d = MyDefinitionManager.Static.GetVoxelMaterialDefinition(material);
-                    var i = d == null ? 255 : matIdxToOreIdx[d.Index];
-                    if (i < 128)
-                        whitelist[i] = true;
-                };
-                foreach (var oreChannel in planet.OreMappings)
-                    Add(oreChannel.Type);
-                foreach (var biome in planet.MaterialGroups)
-                    foreach (var rule in biome.MaterialRules)
-                        foreach (var layer in rule.Layers)
-                            Add(layer.Material);
-                planetWhitelists[planet] = whitelist;
+                int idx;
+                if (def.MinedOre != null && NaturalOresToIdx.TryGetValue(def.MinedOre, out idx))
+                    MatIdxToOreIdx[def.Index] = (byte)idx;
             }
         }
 
-        void LoadAsteroidWhitelist()
+        static void LoadAsteroidWhitelist()
         {
-            asteroidWhitelist = new BitArray(128);
-            int i;
+            AsteroidWhitelist = new BitArray(256);
             foreach (var mat in MyDefinitionManager.Static.GetVoxelMaterialDefinitions())
-                if (mat.SpawnsInAsteroids && (i = matIdxToOreIdx[mat.Index]) < 128)
-                    asteroidWhitelist[i] = true;
+                if (mat.SpawnsInAsteroids)
+                    AsteroidWhitelist[MatIdxToOreIdx[mat.Index]] = true;
         }
     }
 }

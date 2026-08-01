@@ -1,21 +1,25 @@
-﻿using Sandbox.ModAPI.Ingame;
-using Sandbox.ModAPI.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using Sandbox.ModAPI.Ingame;
+using Sandbox.ModAPI.Interfaces;
+using VRage;
 using VRageMath;
 
-namespace IngameScript
+// ReSharper disable ConvertToConstant.Local
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedParameter.Global
+// ReSharper disable UnusedType.Global
+
+namespace OreDetectorReforged
 {
-    public partial class Program : MyGridProgram
+    class Program : MyGridProgram
     {
-        void ReforgedDetectN(BoundingSphereD area, string minedOre, int count, Action<IList<Vector3D>> callBack)
-        {
-            Me.SetValue("ReforgedDetectN", new ValueTuple<BoundingSphereD, string, int, Action<IList<Vector3D>>>(area, minedOre, count, callBack));
-        }
         public void Main(string argument, UpdateType updateSource)
         {
-            ReforgedDetectN(new BoundingSphereD(Me.GetPosition(), 3e4), "Nickel", 1, (vs) => Me.CustomData += "\n" + vs.FirstOrDefault());
+            var area = new BoundingSphereD(Me.GetPosition(), 15000);
+            var ore = "Nickel";
+            Action<Vector3D, Exception> callBack = (v, e) => Me.CustomData = e?.ToString() ?? v.ToString();
+            var tup = new MyTuple<BoundingSphereD, string, Action<Vector3D, Exception>>(area, ore, callBack);
+            Me.SetValue("DetectOre", tup);
         }
     }
 }

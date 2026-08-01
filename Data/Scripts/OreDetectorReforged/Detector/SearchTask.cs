@@ -1,40 +1,98 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sandbox.Game.Entities;
 using VRageMath;
 
 namespace OreDetectorReforged.Detector
 {
     class SearchTask
     {
-        public BoundingSphereD area;
-        public string minedOre;
-        public Func<Vector3D, bool> resultCb;
-        public Action finishCb;
-        public List<IDetectorPage> pages;
+        static readonly Stack<SearchTask> Pool = new Stack<SearchTask>();
+        internal readonly List<IDetectorPage> Pages = new List<IDetectorPage>();
 
-        public SearchTask(BoundingSphereD area, string minedOre, Func<Vector3D, bool> resultCb, Action finishCb)
+        // pre-created once so Tasks.Add(sr.task) reuses the same delegate across pool cycles
+        internal readonly Action Task;
+        Exception _exception;
+        Vector3[] _localPositions;
+        internal Vector3D AreaCenter;
+        internal float AreaRadius;
+
+        // input fields (written on main thread before task submission, read on background thread)
+        internal int CurrOre;
+
+        internal float Distance;
+
+        // result fields
+        internal Vector3 LocalPos;
+        internal Action<Vector3D, Exception> OnFinished;
+        internal float QuasiNearest;
+        internal MyVoxelBase Vb;
+
+        SearchTask()
         {
-            this.area = area;
-            this.minedOre = minedOre;
-            this.resultCb = resultCb;
-            this.finishCb = finishCb;
+            Task = RunOnBackground;
         }
 
-        public SearchTask(BoundingSphereD area, string minedOre, int count, Action<IList<Vector3D>> finishCb)
+        internal static SearchTask Rent()
         {
-            var results = new List<Vector3D>(count);
-            this.area = area;
-            this.minedOre = minedOre;
-            this.resultCb = (v) =>
+            return Pool.Count > 0 ? Pool.Pop() : new SearchTask();
+        }
+
+        // Called on main thread after Dispatch to return the task to the pool.
+        internal void Return()
+        {
+            OnFinished = null;
+            Pages.Clear();
+            Pool.Push(this);
+            Vb = null;
+            _exception = null;
+        }
+
+        // Called on main thread by DetectorServer.UpdateAfterSimulation.
+        internal void Dispatch()
+        {
+            OnFinished(Vb == null ? Vector3D.Zero : Vector3D.Transform(LocalPos, Vb.WorldMatrix), _exception);
+        }
+
+        // Runs on background thread; posted to Tasks as the pre-created delegate.
+        void RunOnBackground()
+        {
+            try
             {
-                results.Add(v);
-                return results.Count < count;
-            };
-            this.finishCb = () => finishCb(results);
+                Execute();
+            }
+            catch (Exception e)
+            {
+                _exception = e;
+            }
+
+            DetectorServer.Finished.Enqueue(this);
         }
 
-        public SearchTask(ValueTuple<BoundingSphereD, string, Func<Vector3D, bool>, Action> t) : this(t.Item1, t.Item2, t.Item3, t.Item4)
+        void Execute()
         {
+            // initialize result fields before the try so they are valid even if an exception occurs
+            Distance = AreaRadius;
+            LocalPos = default(Vector3);
+            Vb = null;
+
+            var pq = DetectorServer.Pq;
+            pq.Clear();
+            if (_localPositions == null || _localPositions.Length < Pages.Count)
+                _localPositions = new Vector3[Pages.Count];
+            for (var p = 0; p < Pages.Count; p++)
+            {
+                _localPositions[p] = Pages[p].WorldToLocal(AreaCenter);
+                Pages[p].PushRoot(Distance, pq, CurrOre, p, _localPositions[p]);
+            }
+
+            while (pq.Count > 0)
+            {
+                var node = pq.Top;
+                pq.Pop();
+                if (Distance < node.D) break;
+                Pages[node.P].Process(ref node, this, pq, _localPositions[node.P]);
+            }
         }
     }
 }

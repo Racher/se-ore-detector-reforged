@@ -19,21 +19,19 @@
                 Array.Copy(buffer, offset, this.buffer, (position += count) - count, count);
             }
 
-            public byte[] Inflate()
+            public byte[] Inflate(int expectedSize)
             {
 #if NOVRAGE
-                byte[] bytesOut;
-                using (var output = new MemoryStream())
+                var bytesOut = new byte[expectedSize];
+                using (var memoryStream = new MemoryStream(buffer, 2, position - 6))
+                using (var deflateStream = new DeflateStream(memoryStream, CompressionMode.Decompress))
                 {
-                    using (var memoryStream = new MemoryStream(buffer, 2, position - 6))
-                    {
-                        using (var deflateStream = new DeflateStream(memoryStream, CompressionMode.Decompress))
-                        {
-                            deflateStream.CopyTo(output);
-                            deflateStream.Close();
-                        }
-                    }
-                    bytesOut = output.ToArray();
+                    var total = 0;
+                    int n;
+                    while (total < bytesOut.Length && (n = deflateStream.Read(bytesOut, total, bytesOut.Length - total)) > 0)
+                        total += n;
+                    if (total < bytesOut.Length)
+                        Array.Resize(ref bytesOut, total);
                 }
                 return bytesOut;
 #else
@@ -42,9 +40,10 @@
                 gzBuffer[5] = 0x8b;
                 gzBuffer[6] = 0x08;
                 Array.Copy(buffer, 2, gzBuffer, 14, position - 6);
-                var bytesOut = new byte[100 << 20];
+                var bytesOut = new byte[expectedSize];
                 var l = new VRage.MyCompressionStreamLoad(gzBuffer).GetBytes(bytesOut.Length, bytesOut);
-                Array.Resize(ref bytesOut, l);
+                if (l < bytesOut.Length)
+                    Array.Resize(ref bytesOut, l);
                 return bytesOut;
 #endif
             }
@@ -162,9 +161,17 @@
                     }
                 }
 
-                var bytesOut = memoryStream.Inflate();
-
                 var bspp = Decoder.GetBytesAndSamplesPerPixel(imageHeader);
+
+                // PNG inflated size: per-row filter byte (1) + width*bpp pixel bytes, times height.
+                // Adam7 splits the image into 7 passes that each have their own filter bytes;
+                // a 2x multiplier is a safe upper bound (bytes get trimmed via Array.Resize on short reads).
+                var rowSize = 1 + imageHeader.Width * bspp.bytesPerPixel;
+                var expectedSize = imageHeader.InterlaceMethod == InterlaceMethod.Adam7
+                    ? rowSize * imageHeader.Height * 2
+                    : rowSize * imageHeader.Height;
+
+                var bytesOut = memoryStream.Inflate(expectedSize);
 
                 bytesOut = Decoder.Decode(bytesOut, imageHeader, bspp.bytesPerPixel, bspp.samplesPerPixel);
 

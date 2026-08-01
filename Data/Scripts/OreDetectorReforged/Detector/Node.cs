@@ -4,24 +4,25 @@ namespace OreDetectorReforged.Detector
 {
     struct Node
     {
-        public float d;
-        public ushort p;
-        public ushort x;
-        public ushort y;
-        public ushort z;
+        public readonly float D;
+        public readonly ushort P;
+        public readonly short Face;
+        public readonly ulong I;
 
-        public Node(float d, ushort p, ushort x, ushort y, ushort z)
+        public Node(float d, int p, long i, int face)
         {
-            this.d = d;
-            this.p = p;
-            this.x = x;
-            this.y = y;
-            this.z = z;
+            D = d;
+            P = (ushort)p;
+            I = (ulong)i;
+            Face = (short)face;
         }
 
         public struct Comparer : IComparer<Node>
         {
-            public int Compare(Node x, Node y) => x.d.CompareTo(y.d);
+            public int Compare(Node x, Node y)
+            {
+                return x.D.CompareTo(y.D);
+            }
         }
     }
 }

@@ -1,91 +1,127 @@
-﻿using VRage.Game.Components;
 using System;
-using System.Collections.Generic;
-using VRageMath;
-using Sandbox.Game.Entities;
-using System.Diagnostics;
-using VRage.Game;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using VRage.Game.Components;
+using VRage.Game.ModAPI;
+using VRageMath;
 
 namespace OreDetectorReforged.Detector
 {
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     class DetectorServer : MySessionComponentBase
     {
-        readonly static PriorityQueue<Node> pq = new PriorityQueue<Node>(6, new Node.Comparer());
-        readonly static List<MyVoxelBase> vbs = new List<MyVoxelBase>();
-        readonly static BlockingCollection<SearchTask> tasks = new BlockingCollection<SearchTask>(new ConcurrentQueue<SearchTask>());
-        readonly static ConcurrentQueue<SearchTask> finished = new ConcurrentQueue<SearchTask>();
+        // Action queue: accepts both SearchResult.task and cache-clear lambdas from page components.
+        internal static readonly BlockingCollection<Action> Tasks = new BlockingCollection<Action>(new ConcurrentQueue<Action>());
 
-        public static void Add(SearchTask task)
+        // Accessed by SearchResult.RunOnBackground (same assembly).
+        internal static readonly ConcurrentQueue<SearchTask> Finished = new ConcurrentQueue<SearchTask>();
+        internal static readonly ConcurrentQueue<IMyGps> Misses = new ConcurrentQueue<IMyGps>();
+        internal static readonly PriorityQueue<Node, Node.Comparer> Pq = new PriorityQueue<Node, Node.Comparer>(1, new Node.Comparer());
+        internal static bool ShowMiss;
+        static readonly List<MyVoxelBase> AllVoxels = new List<MyVoxelBase>();
+
+        // Perf counters (read by PerfCommand for /odr perf reporting).
+        internal static long UpdateThreadTicks;
+        internal static long DetectorThreadTicks;
+        internal static long PlanetLoadTicks;
+        internal static long AsteroidLoadTicks;
+        internal static long BoulderLoadTicks;
+        internal static long PerfWindowStartTicks = Stopwatch.GetTimestamp();
+
+        public static void SubmitSearch(BoundingSphereD area, string oreName, Action<Vector3D, Exception> onFinished)
         {
-            vbs.Clear();
-            MyGamePruningStructure.GetAllVoxelMapsInSphere(ref task.area, vbs);
-            task.pages = new List<IDetectorPage>(100);
-            foreach (var vb in vbs)
+            if (MaterialMappingHelper.NaturalOresToIdx == null)
             {
-                if (vb.RootVoxel != vb)
-                    continue;
-                var cloud = vb.Components.Get<VoxelMapComponent>() ?? new VoxelMapComponent(vb);
-                if (cloud.data.Length > 0)
-                    task.pages.AddRange(cloud.data);
+                onFinished(Vector3D.Zero, new InvalidOperationException("Detector is not yet initialized"));
+                return;
             }
-            vbs.Clear();
-            tasks.Add(task);
-        }
 
-        public static void AddRaw(object o) => Add(new SearchTask((ValueTuple<BoundingSphereD, string, Func<Vector3D, bool>, Action>)o));
+            int currOre;
+            if (!MaterialMappingHelper.NaturalOresToIdx.TryGetValue(oreName, out currOre))
+            {
+                onFinished(Vector3D.Zero, new ArgumentException($"Key {oreName} not in {string.Join(",", MaterialMappingHelper.NaturalOresToIdx.Keys)}"));
+                return;
+            }
+
+            AllVoxels.Clear();
+            MyGamePruningStructure.GetAllVoxelMapsInSphere(ref area, AllVoxels);
+            var sr = SearchTask.Rent();
+            sr.CurrOre = currOre;
+            sr.AreaRadius = (float)area.Radius;
+            sr.AreaCenter = area.Center;
+            sr.QuasiNearest = 0.95f;
+            sr.OnFinished = onFinished;
+            sr.Pages.Clear();
+            foreach (var vb in AllVoxels)
+            {
+                if (vb.RootVoxel != vb) continue;
+                if (vb.BoulderInfo.HasValue && vb.BoulderInfo.Value.SectorId >> 51 > 0) continue;
+                var planet = vb as MyPlanet;
+                if (planet != null)
+                    sr.Pages.Add(DetectorPagePlanet.GetOrCreate(planet));
+                else if (vb.Storage.Size.AbsMax() <= 16)
+                    sr.Pages.Add(DetectorPageBoulder.GetOrCreate(vb));
+                else
+                    sr.Pages.Add(DetectorPageAsteroid.GetOrCreate(vb));
+            }
+
+            Tasks.Add(sr.Task);
+        }
 
         public override void LoadData()
         {
-            MyAPIGateway.Parallel.StartBackground(ProcessTasks);
-        }
-
-        public override void UpdateAfterSimulation()
-        {
-            SearchTask task;
-            while (finished.TryDequeue(out task))
-                task.finishCb();
+            MyAPIGateway.Parallel.StartBackground(ProcessOnBackground);
         }
 
         protected override void UnloadData()
         {
-            tasks?.CompleteAdding();
-            tasks?.Dispose();
+            Tasks?.CompleteAdding();
+            Tasks?.Dispose();
         }
 
-        static void ProcessTasks()
+        public override void UpdateAfterSimulation()
         {
+            var sw = Stopwatch.StartNew();
             try
             {
-                for (; !tasks.IsAddingCompleted; MyAPIGateway.Parallel.Sleep(0))
+                SearchTask sr;
+                while (Finished.TryDequeue(out sr))
                 {
-                    var task = tasks.Take();
-                    var sliceEnd = Stopwatch.GetTimestamp() + TimeSpan.FromMilliseconds(15).Ticks;
-                    do
-                    {
-                        var ore = Array.IndexOf(MaterialMappingHelper.Static.naturalOres, task.minedOre);
-                        if (ore != -1)
-                        {
-                            for (var page = 0; page < task.pages.Count; ++page)
-                                task.pages[page].Setup(pq, task.area.Center, page, ore);
-                            while (pq.Count > 0)
-                            {
-                                var r = task.pages[pq.Top.p].Pop();
-                                if (r.IsZero())
-                                    continue;
-                                if (task.area.Contains(r) == ContainmentType.Disjoint || !task.resultCb(r))
-                                    break;
-                            }
-                            pq.Clear();
-                        }
-                        finished.Enqueue(task);
-                    }
-                    while (Stopwatch.GetTimestamp() < sliceEnd && tasks.TryTake(out task));
+                    sr.Dispatch();
+                    sr.Return();
+                }
+
+                if (ShowMiss)
+                {
+                    IMyGps miss;
+                    if (Misses.TryDequeue(out miss))
+                        MyAPIGateway.Session.GPS.AddLocalGps(miss);
                 }
             }
-            catch (InvalidOperationException) { }
+            catch (Exception e)
+            {
+                MyAPIGateway.Utilities.ShowMessage(typeof(DetectorServer).FullName, e.ToString());
+            }
+
+            UpdateThreadTicks += sw.ElapsedTicks;
+        }
+
+        static void ProcessOnBackground()
+        {
+            foreach (var action in Tasks.GetConsumingEnumerable())
+                try
+                {
+                    var sw = Stopwatch.StartNew();
+                    action();
+                    DetectorThreadTicks += sw.ElapsedTicks;
+                }
+                catch (Exception e)
+                {
+                    MyAPIGateway.Utilities.ShowMessage(typeof(DetectorServer).FullName, e.ToString());
+                }
         }
     }
 }

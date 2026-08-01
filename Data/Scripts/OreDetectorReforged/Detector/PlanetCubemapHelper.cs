@@ -3,7 +3,6 @@ using VRageMath;
 
 namespace OreDetectorReforged.Detector
 {
-
     static class PlanetCubemapHelper
     {
         public static string GetFaceMatInfix(int f)
@@ -55,6 +54,9 @@ namespace OreDetectorReforged.Detector
             }
         }
 
-        public static Vector3 TexToCube(Vector2 tx, int width, int f) => FaceToCube((tx * 2 / width) - 1, f);
+        public static Vector3 TexToCube(Vector2 tx, int width, int f)
+        {
+            return FaceToCube(tx * 2 / width - 1, f);
+        }
     }
 }

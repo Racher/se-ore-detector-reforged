@@ -1,3 +1,8 @@
+.claude/
+.idea/
 .vs/
 .vscode/
 output/
+OreDetectorReforged.sln.DotSettings.user
+Tests/*/bin
+Tests/*/obj
